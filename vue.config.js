@@ -17,7 +17,7 @@ module.exports = {
     browserExtension: {
       componentOptions: {
         background: {
-          entry: "src/background.js",
+          entry: "src/background.ts",
         },
       },
     },

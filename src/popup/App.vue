@@ -1,22 +1,20 @@
 <template>
-  <div class="mt-4">
-    <VTextField label="Text" clearable solo hide-details></VTextField>
+  <div class="v-popup">
+    <PopupLayout />
   </div>
 </template>
 
 <script>
-import { VTextField } from "vuetify/lib";
-
+import PopupLayout from "@/components/layout/PopupLayout.vue";
 export default {
   name: "App",
-  components: { VTextField },
+  components: { PopupLayout },
 };
 </script>
 
 <style>
 html {
-  width: 400px;
-  height: 400px;
-  padding: 16px;
+  width: 357px;
+  height: 600px;
 }
 </style>

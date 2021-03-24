@@ -13,11 +13,12 @@
     "strictPropertyInitialization": false,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": ["webpack-env", "mocha", "chai", "node"],
+    "types": ["webpack-env", "mocha", "chai", "node", "core-js"],
     "paths": {
       "@/*": ["src/*"]
     },
-    "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
+    "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
+    "typeRoots": ["../node_modules/@types"]
   },
   "include": [
     "src/**/*.ts",
@@ -26,7 +27,7 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "src/custom.d.ts",
-    "src/background.js"
+    "src/background.ts"
   ],
   "exclude": ["node_modules"]
 }

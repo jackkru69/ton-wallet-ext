@@ -1,6 +1,6 @@
 <template>
   <div class="v-main-page py-8">
-    <Inner>1</Inner>
+    <Inner></Inner>
   </div>
 </template>
 
@@ -24,18 +24,9 @@ const Mappers = Vue.extend({
   components: { Inner, VCard },
   // methods: { isEmpty },
 })
-export default class MainPage extends Mappers {
-  async created() {
-    await this.fetchBalanceTotal();
-  }
-}
+export default class MainPage extends Mappers {}
 </script>
 
 <style lang="sass" scoped>
 .v-main-page
-  &__cards
-    display: grid
-    grid-template-columns: 1fr 1fr
-    grid-gap: 16px
-    box-sizing: border-box
 </style>

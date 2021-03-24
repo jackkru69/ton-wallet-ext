@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.2.11",
+    "@types/core-js": "^2.5.4",
     "@types/lodash": "^4.14.165",
     "@types/node": "^14.14.22",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
@@ -53,9 +54,9 @@
     "sass-loader": "^10.0.0",
     "typescript": "~3.9.3",
     "v-clipboard": "^2.2.3",
+    "vue-cli-plugin-browser-extension": "latest",
     "vue-cli-plugin-vuetify": "~2.1.0",
     "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.7.0",
-    "vue-cli-plugin-browser-extension": "latest"
+    "vuetify-loader": "^1.7.0"
   }
 }
