@@ -3,7 +3,7 @@
   "name": "__MSG_extName__",
   "description": "A Vue Browser Extension",
   "default_locale": "en",
-  "permissions": ["<all_urls>", "*://*/*", "storage", "unlimitedStorage"],
+  "permissions": ["<all_urls>", "*://*/*", "storage", "unlimitedStorage", "activeTab"],
   "icons": {
     "16": "icons/16.png",
     "48": "icons/48.png",

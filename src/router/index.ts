@@ -6,11 +6,11 @@ import InitializePage from "@/pages/initialize/InitializePage.vue";
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
-  // {
-  //   path: "/",
-  //   name: "MainPage",
-  //   component: MainPage,
-  // },
+  {
+    path: "/",
+    name: "MainPage",
+    component: MainPage,
+  },
   {
     path: "/initialize",
     name: "Initialize",

@@ -2,14 +2,12 @@ module.exports = {
   transpileDependencies: ["vuetify"],
   pages: {
     popup: {
-      template: "public/browser-extension.html",
+      template: "public/popup.html",
       entry: "./src/popup/main.ts",
-      title: "Popup",
     },
     standalone: {
-      template: "public/browser-extension.html",
+      template: "public/index.html",
       entry: "./src/standalone/main.ts",
-      title: "Standalone",
       filename: "index.html",
     },
   },

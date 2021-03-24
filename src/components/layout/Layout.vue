@@ -1,6 +1,5 @@
 <template>
   <v-app>
-    <!-- <Aside /> -->
     <Header />
     <v-main>
       <v-container fluid class="pa-0">
@@ -21,4 +20,4 @@ import { VTextField, VBtn, VOverlay } from "vuetify/lib";
 })
 export default class Layout extends Vue {}
 </script>
-cute toe oblige laugh travel rabbit broken neutral loop slogan remain blur
+

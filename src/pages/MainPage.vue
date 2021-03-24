@@ -1,6 +1,6 @@
 <template>
   <div class="v-main-page py-8">
-    <Inner></Inner>
+    <Inner><v-btn @click="onClick">1111</v-btn></Inner>
   </div>
 </template>
 
@@ -24,7 +24,12 @@ const Mappers = Vue.extend({
   components: { Inner, VCard },
   // methods: { isEmpty },
 })
-export default class MainPage extends Mappers {}
+export default class MainPage extends Mappers {
+  onClick() {
+    browser.runtime.sendMessage({});
+    console.log(1);
+  }
+}
 </script>
 
 <style lang="sass" scoped>

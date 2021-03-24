@@ -54,6 +54,7 @@
     "sass-loader": "^10.0.0",
     "typescript": "~3.9.3",
     "v-clipboard": "^2.2.3",
+    "vlf": "^1.1.0",
     "vue-cli-plugin-browser-extension": "latest",
     "vue-cli-plugin-vuetify": "~2.1.0",
     "vue-template-compiler": "^2.6.11",
