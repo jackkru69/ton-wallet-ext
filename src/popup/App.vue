@@ -1,14 +1,14 @@
 <template>
   <div class="v-popup">
-    <PopupLayout />
+    <Layout />
   </div>
 </template>
 
 <script>
-import PopupLayout from "@/components/layout/PopupLayout.vue";
+import Layout from "@/components/layout/Layout.vue";
 export default {
   name: "App",
-  components: { PopupLayout },
+  components: { Layout },
 };
 </script>
 

@@ -20,17 +20,15 @@ import {
   VNavigationDrawer,
 } from "vuetify/lib";
 
-const Mappers = Vue.extend({
+@Component({
   components: {
     VList,
     VListItem,
     VListItemTitle,
     VNavigationDrawer,
   },
-});
-
-@Component
-export default class Aside extends Mappers {
+})
+export default class Aside extends Vue {
   @Prop() isOpen: boolean;
 }
 </script>

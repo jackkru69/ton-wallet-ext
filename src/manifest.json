@@ -13,6 +13,14 @@
     "scripts": ["js/background.js"],
     "persistent": false
   },
+  "content_scripts": [
+    {
+      "matches": ["file://*/*", "http://*/*", "https://*/*"],
+      "js": ["js/content-script.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
   "browser_action": {
     "default_popup": "popup.html",
     "default_title": "__MSG_extName__",

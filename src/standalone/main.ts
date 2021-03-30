@@ -9,6 +9,7 @@ const vco = require("v-click-outside");
 
 import "@mdi/font/css/materialdesignicons.min.css";
 import vuetify from "../plugins/vuetify";
+Vue.config.devtools = true;
 
 Vue.use(vco);
 Vue.use(Clipboard);

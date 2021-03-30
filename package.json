@@ -13,7 +13,6 @@
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "core-js": "^3.6.5",
-    "localforage": "^1.9.0",
     "moment": "^2.29.1",
     "v-click-outside": "^3.1.2",
     "vue": "^2.6.11",
@@ -23,6 +22,7 @@
     "vue-uuid": "^2.0.2",
     "vuetify": "^2.4.0",
     "vuex": "^3.4.0",
+    "vuex-shared-mutations": "^1.0.2",
     "vuex-smart-module": "^0.5.0"
   },
   "devDependencies": {
@@ -58,6 +58,7 @@
     "vue-cli-plugin-browser-extension": "latest",
     "vue-cli-plugin-vuetify": "~2.1.0",
     "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.7.0"
+    "vuetify-loader": "^1.7.0",
+    "vuex-persistedstate": "^4.0.0-beta.3"
   }
 }
