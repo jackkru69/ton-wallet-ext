@@ -2,7 +2,7 @@
 browser.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
     // @ts-ignore
-    browser.tabs.create({ url: "index.html" });
+    browser.tabs.create({ url: "index.html#/initialize" });
   }
 });
 
@@ -14,12 +14,10 @@ browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     file: "content-script.js",
   });
 });
-
-import { store } from "./store/index";
+//
+// import { store } from "./store/index";
 
 // Increase timer each second
-setInterval(function() {
-  console.log(store.state);
-
-  store.dispatch("pushAct");
+setInterval(async function() {
+  // store.dispatch("pushAct");
 }, 5000);

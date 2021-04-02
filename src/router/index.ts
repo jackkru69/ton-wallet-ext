@@ -1,7 +1,8 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import MainPage from "@/pages/MainPage.vue";
-import InitializePage from "@/pages/initialize/InitializePage.vue";
+import InitializePage from "@/pages/InitializePage.vue";
+import CreateWalletPage from "@/pages/CreateWalletPage.vue";
 
 Vue.use(VueRouter);
 
@@ -15,6 +16,11 @@ const routes: Array<RouteConfig> = [
     path: "/initialize",
     name: "Initialize",
     component: InitializePage,
+  },
+  {
+    path: "/initialize/create",
+    name: "CreateWallet",
+    component: CreateWalletPage,
   },
 ];
 

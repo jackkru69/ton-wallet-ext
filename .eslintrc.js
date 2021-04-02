@@ -13,6 +13,7 @@ module.exports = {
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/member-delimiter-style": "off",
+    "@typescript-eslint/camelcase": "off",
   },
   overrides: [
     {

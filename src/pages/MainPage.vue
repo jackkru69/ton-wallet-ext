@@ -19,3 +19,6 @@ export default class MainPage extends Vue {}
 <style lang="sass" scoped>
 .v-main-page
 </style>
+
+
+

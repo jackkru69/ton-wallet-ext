@@ -10,6 +10,7 @@
       hide-details
       dense
       outlined
+      class="v-app-bar__select"
     />
   </v-app-bar>
 </template>
@@ -40,8 +41,8 @@ const Mappers = Vue.extend({
 @Component({ components: { VSwitch, VBtn, VSelect, VSpacer } })
 export default class Header extends Mappers {
   networks = [
-    { title: "testnet", value: "testnet" },
-    { title: "mainnet", value: "mainnet" },
+    { title: "TON testnet network", value: "testnet" },
+    { title: "TON mainnet network", value: "mainnet" },
   ];
 }
 </script>
@@ -51,4 +52,6 @@ export default class Header extends Mappers {
   &__logo
     width: 48px
     height: 48px
+  &__select
+    max-width: 250px
 </style>

@@ -35,12 +35,12 @@ export default class Inner extends Vue {
     max-width: 1080px
   @media screen and (min-width: 1280px)
     max-width: 1080px
-  @media screen and (min-width: 1440px)
-    max-width: 1240px
+  // @media screen and (min-width: 1440px)
+  //   max-width: 1240px
 
-  &._fullscreen1920
-    @media screen and (min-width: 1920px)
-      max-width: 1720px
-  &._fullscreen
-    max-width: 100%!important
+  // &._fullscreen1920
+  //   @media screen and (min-width: 1920px)
+  //     max-width: 1720px
+  // &._fullscreen
+  //   max-width: 100%!important
 </style>

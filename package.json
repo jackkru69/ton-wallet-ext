@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@mdi/font": "^5.9.55",
+    "@tonclient/core": "^1.11.1",
+    "@tonclient/lib-web": "^1.11.1",
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "core-js": "^3.6.5",

@@ -979,6 +979,16 @@
   resolved "https://registry.yarnpkg.com/@soda/get-current-script/-/get-current-script-1.0.2.tgz#a53515db25d8038374381b73af20bb4f2e508d87"
   integrity sha512-T7VNNlYVM1SgQ+VsMYhnDkcGmWhQdL0bDyGm5TlQ3GBXnJscEClUUOKduWTmm2zCnvNLC1hc3JpuXjs/nFOc5w==
 
+"@tonclient/core@^1.11.1":
+  version "1.11.1"
+  resolved "https://registry.yarnpkg.com/@tonclient/core/-/core-1.11.1.tgz#4f2674094a9a3ef708933969a40582c633d63352"
+  integrity sha512-2solUM3L6yHo276L+CywHlzGTO9Qs80dWupjLfrOvG+weDn99KTTCFzRhnyRMXlwwk5JyYaRnNxmhR0j+OZGtg==
+
+"@tonclient/lib-web@^1.11.1":
+  version "1.11.1"
+  resolved "https://registry.yarnpkg.com/@tonclient/lib-web/-/lib-web-1.11.1.tgz#60ca4d1b48cd1c0ba8e25cbb47f1e7ddf30c4bb7"
+  integrity sha512-PgKg3zXL24DY/bhX2yQrK1LeDbsbCqPvINRJTZrea3iIVMe0DyruLIVNBgZYEU38A83fAPOrD3R9yb3sxhuLkA==
+
 "@types/anymatch@*":
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/@types/anymatch/-/anymatch-1.3.1.tgz#336badc1beecb9dacc38bea2cf32adf627a8421a"
