@@ -1,8 +1,10 @@
 import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-module";
 
-export type Network = "testnet" | "mainnet";
+import { accounts } from "./modules/accounts";
+
+export type Network = "http://net.ton.dev" | "http://main.ton.dev";
 class RootState {
-  network: Network = "testnet";
+  network: Network = "http://net.ton.dev";
 }
 
 class RootGetters extends Getters<RootState> {
@@ -28,6 +30,9 @@ export const root = new Module({
   getters: RootGetters,
   mutations: RootMutations,
   actions: RootActions,
+  modules: {
+    accounts,
+  },
 });
 
 export const rootModuleMapper = createMapper(root);

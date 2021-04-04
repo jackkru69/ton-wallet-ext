@@ -41,8 +41,8 @@ const Mappers = Vue.extend({
 @Component({ components: { VSwitch, VBtn, VSelect, VSpacer } })
 export default class Header extends Mappers {
   networks = [
-    { title: "TON testnet network", value: "testnet" },
-    { title: "TON mainnet network", value: "mainnet" },
+    { title: "TON mainnet network", value: "http://main.ton.dev" },
+    { title: "TON testnet network", value: "http://net.ton.dev" },
   ];
 }
 </script>

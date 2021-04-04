@@ -3,31 +3,29 @@ import { libWeb } from "@tonclient/lib-web";
 
 export class TonService {
   client: TonClient;
+  network: string;
 
   static instance: TonService;
 
-  constructor() {
+  constructor(network = "http://net.ton.dev") {
     if (TonService.instance) return TonService.instance;
     TonClient.useBinaryLibrary(libWeb);
+    this.network = network;
     this.client = new TonClient({
       network: {
-        server_address: "http://net.ton.dev",
+        server_address: network,
       },
     });
 
     TonService.instance = this;
   }
 
-  async getBalance(address: string) {
-    if (!address) throw new Error("address not specified");
-    const { result } = await this.client.net.query_collection({
-      collection: "accounts",
-      filter: { id: { eq: address } },
-      result: "id balance",
+  public setNetwork(network: string): void {
+    this.network = network;
+    this.client = new TonClient({
+      network: {
+        server_address: network,
+      },
     });
-    if (!result[0]) {
-      return "";
-    }
-    return parseInt(result[0].balance, 16);
   }
 }

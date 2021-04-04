@@ -15,9 +15,18 @@ browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   });
 });
 //
-// import { store } from "./store/index";
+import { store } from "./store/index";
 
-// Increase timer each second
-setInterval(async function() {
-  // store.dispatch("pushAct");
-}, 5000);
+import { TonService } from "@/ton/ton.service";
+
+export const tonService = new TonService(store.state.network);
+
+// setInterval(async function() {
+//   console.log(tonService);
+// }, 5000);
+
+store.subscribe((mutation) => {
+  if (mutation.type === "setNetwork") {
+    tonService.setNetwork(mutation.payload);
+  }
+});
