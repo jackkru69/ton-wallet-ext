@@ -17,6 +17,3 @@ import { VCard, VIcon } from "vuetify/lib";
 export default class RestoreWalletPage extends Vue {}
 </script>
 
-<style lang="sass" scoped>
-.v-restore-wallet-page
-</style>

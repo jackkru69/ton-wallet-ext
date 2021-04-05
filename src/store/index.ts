@@ -10,5 +10,5 @@ Vue.use(Vuex);
 
 export const store = createStore(root, {
   strict: process.env.NODE_ENV !== "production",
-  plugins: [createMutationsSharer({ predicate: ["setNetwork"] }), createPersistedState()],
+  plugins: [createMutationsSharer({ predicate: ["setNetwork", "createNewAccount"] }), createPersistedState()],
 });

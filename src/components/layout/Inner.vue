@@ -21,9 +21,7 @@ export default class Inner extends Vue {
 
 <style lang="sass" scoped>
 .v-inner
-  padding: 0 8px
-  max-width: 320px
-  padding: 0 32px
+  height: 100%
 
   box-sizing: border-box
   margin: 0 auto

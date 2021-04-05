@@ -8,12 +8,20 @@
         @submit.prevent="onSubmit"
       >
         <h1 class="mb-8">Create wallet</h1>
+        <VTextField
+          class="mb-8"
+          v-model="name"
+          clearable
+          outlined
+          hide-details
+          label="Name"
+        ></VTextField>
         <VSelect
           class="mb-8"
           v-model="walletType"
           :items="walletsTypes"
           label="Outlined style"
-          solo
+          outlined
           hide-details
         ></VSelect>
         <VTextField
@@ -21,16 +29,41 @@
           class="mb-8"
           v-model.trim="numberOfCustodians"
           clearable
-          solo
+          outlined
           hide-details
           label="Number of custodians"
         ></VTextField>
-        <h2 class="mb-8">Password</h2>
+        <VSelect
+          class="mb-8"
+          v-model="seedPhraseWorldCount"
+          :items="[12, 24]"
+          label="Seed phrase world count"
+          outlined
+          hide-details
+        ></VSelect>
+        <VTextField
+          class="mb-8"
+          v-model.trim="seedPhrase"
+          outlined
+          hide-details
+          label="Seed phrase"
+          readonly
+        >
+          <template v-slot:append>
+            <VBtn @click="generatePhrase" height="28" class="mr-3">
+              Generate
+            </VBtn>
+            <VBtn v-clipboard="() => seedPhrase" height="28" color="primary">
+              Copy
+            </VBtn>
+          </template></VTextField
+        >
+        <!-- <h2 class="mb-8">Password</h2>
         <VTextField
           class="mb-8"
           v-model.trim="password"
           clearable
-          solo
+          outlined
           hide-details
           label="Password"
         ></VTextField>
@@ -38,10 +71,10 @@
           class="mb-8"
           v-model.trim="confirmPassword"
           clearable
-          solo
+          outlined
           hide-details
           label="Confirm password"
-        ></VTextField>
+        ></VTextField> -->
         <div class="d-flex justify-end">
           <VBtn class="mr-4"> Back </VBtn>
           <VBtn color="primary" type="submit">Create </VBtn>
@@ -55,38 +88,69 @@
 import { Component, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import { VCard, VIcon, VTextField, VSelect, VForm, VBtn } from "vuetify/lib";
-import { tonService } from "@/background";
+import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
+import {
+  accountsModuleMapper,
+  walletsTypes,
+  WalletType,
+} from "@/store/modules/accounts";
+import { rootModuleMapper } from "@/store/root";
+
+const Mappers = Vue.extend({
+  computed: {
+    ...rootModuleMapper.mapGetters(["network"]),
+  },
+  methods: {
+    ...accountsModuleMapper.mapActions(["createNewAccount"]),
+    ...rootModuleMapper.mapActions(["setActiveAccountID"]),
+  },
+});
 
 @Component({
   components: { Inner, VCard, VIcon, VTextField, VSelect, VForm, VBtn },
 })
-export default class CreateWalletPage extends Vue {
-  walletType = "original";
-  numberOfCustodians = "";
+export default class CreateWalletPage extends Mappers {
+  valid = true;
+  name = "";
+  walletType: WalletType = "safe-multisig";
+  numberOfCustodians = 1;
+  seedPhraseWorldCount = 12;
+  seedPhrase = "";
+
   password = "";
   confirmPassword = "";
 
-  walletsTypes = [
-    {
-      text: "Original TON wallet",
-      value: "original",
-    },
-    {
-      text: "Safe Multisig TON wallet",
-      value: "safe-multisig",
-    },
-    {
-      text: "Set Code Multisig TON wallet",
-      value: "set-code-multisig",
-    },
-    {
-      text: "Set Code Multisig 2 TON wallet",
-      value: "set-code-multisig2",
-    },
-  ];
+  data() {
+    return {
+      walletsTypes,
+    };
+  }
+
+  async generatePhrase() {
+    const seedPhrase: any = await generateSeed(this.seedPhraseWorldCount);
+    this.seedPhrase = seedPhrase?.phrase;
+  }
+
+  async onSubmit() {
+    const keypair = await convertSeedToKeyPair(
+      this.seedPhrase,
+      this.seedPhraseWorldCount
+    );
+    const { walletType, network, name, numberOfCustodians } = this;
+    await this.createNewAccount({
+      keypair,
+      walletType,
+      network,
+      name,
+      numberOfCustodians,
+    });
+    this.setActiveAccountID(0);
+    this.$router.push("/");
+  }
+
+  async created() {
+    this.generatePhrase();
+  }
 }
 </script>
 
-<style lang="sass" scoped>
-.v-create-wallet-page
-</style>

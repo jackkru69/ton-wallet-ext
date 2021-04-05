@@ -13,21 +13,8 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import {
-  VList,
-  VListItem,
-  VListItemTitle,
-  VNavigationDrawer,
-} from "vuetify/lib";
 
-@Component({
-  components: {
-    VList,
-    VListItem,
-    VListItemTitle,
-    VNavigationDrawer,
-  },
-})
+@Component
 export default class Aside extends Vue {
   @Prop() isOpen: boolean;
 }

@@ -39,6 +39,3 @@ import { VCard, VIcon } from "vuetify/lib";
 export default class InitializePage extends Vue {}
 </script>
 
-<style lang="sass" scoped>
-.v-initialize-page
-</style>
