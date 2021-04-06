@@ -28,28 +28,28 @@
       <VCard>
         <v-subheader>Accounts</v-subheader>
         <v-divider></v-divider>
-        <v-list class="v-app-bar__list" max-height="228px">
-          <v-list-item-group v-model="modelActiveAccountID" color="primary">
-            <v-list-item v-for="(item, i) in accounts" :key="i">
-              <v-list-item-content>
-                <v-list-item-title v-text="item.name"></v-list-item-title>
-              </v-list-item-content>
-            </v-list-item>
-          </v-list-item-group>
-        </v-list>
+        <VList class="v-app-bar__list" max-height="228px">
+          <VListItemGroup v-model="modelActiveAccountID" color="primary">
+            <VListItem v-for="(item, i) in accounts" :key="i">
+              <VListItemContent>
+                <VListItemTitle v-text="item.name"></VListItemTitle>
+              </VListItemContent>
+            </VListItem>
+          </VListItemGroup>
+        </VList>
         <v-divider></v-divider>
-        <v-list nav>
-          <v-list-item link>
-            <v-list-item-content>
-              <v-list-item-title>Add account</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-          <v-list-item link>
-            <v-list-item-content>
-              <v-list-item-title>Restore account</v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
+        <VList nav>
+          <VListItem link>
+            <VListItemContent>
+              <VListItemTitle>Add account</VListItemTitle>
+            </VListItemContent>
+          </VListItem>
+          <VListItem link>
+            <VListItemContent>
+              <VListItemTitle>Restore account</VListItemTitle>
+            </VListItemContent>
+          </VListItem>
+        </VList>
       </VCard>
     </VMenu>
   </v-app-bar>

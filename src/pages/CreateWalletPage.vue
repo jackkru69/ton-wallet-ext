@@ -9,40 +9,41 @@
       >
         <h1 class="mb-8">Create wallet</h1>
         <VTextField
-          class="mb-8"
+          class="mb-4"
           v-model="name"
           clearable
           outlined
-          hide-details
           label="Name"
+          :rules="[(v) => !!v || 'Name is required']"
         ></VTextField>
         <VSelect
-          class="mb-8"
+          class="mb-4"
           v-model="walletType"
           :items="walletsTypes"
-          label="Outlined style"
+          label="Wallet type"
           outlined
-          hide-details
         ></VSelect>
         <VTextField
           v-if="walletType !== 'original'"
-          class="mb-8"
+          class="mb-4"
           v-model.trim="numberOfCustodians"
           clearable
           outlined
-          hide-details
           label="Number of custodians"
+          :rules="[(v) => !!`${v}` || 'Wallet type is required']"
         ></VTextField>
         <VSelect
-          class="mb-8"
+          class="mb-4"
           v-model="seedPhraseWorldCount"
           :items="[12, 24]"
           label="Seed phrase world count"
           outlined
-          hide-details
+          :rules="[
+            (v) => !!`${v}` || 'Seed phrase world count type is required',
+          ]"
         ></VSelect>
         <VTextField
-          class="mb-8"
+          class="mb-4"
           v-model.trim="seedPhrase"
           outlined
           hide-details
@@ -76,8 +77,13 @@
           label="Confirm password"
         ></VTextField> -->
         <div class="d-flex justify-end">
-          <VBtn class="mr-4"> Back </VBtn>
-          <VBtn color="primary" type="submit">Create </VBtn>
+          <VBtn to="/initialize" class="mr-4"> Back </VBtn>
+          <VBtn
+            color="primary"
+            type="submit"
+            :disabled="!valid || !name || !numberOfCustodians || !seedPhrase"
+            >Create
+          </VBtn>
         </div>
       </VForm>
     </Inner>
@@ -95,6 +101,7 @@ import {
   WalletType,
 } from "@/store/modules/accounts";
 import { rootModuleMapper } from "@/store/root";
+import { tonService } from "@/background";
 
 const Mappers = Vue.extend({
   computed: {
@@ -127,12 +134,16 @@ export default class CreateWalletPage extends Mappers {
   }
 
   async generatePhrase() {
-    const seedPhrase: any = await generateSeed(this.seedPhraseWorldCount);
+    const seedPhrase: any = await generateSeed(
+      tonService.client,
+      this.seedPhraseWorldCount
+    );
     this.seedPhrase = seedPhrase?.phrase;
   }
 
   async onSubmit() {
     const keypair = await convertSeedToKeyPair(
+      tonService.client,
       this.seedPhrase,
       this.seedPhraseWorldCount
     );
@@ -143,6 +154,7 @@ export default class CreateWalletPage extends Mappers {
       network,
       name,
       numberOfCustodians,
+      client: tonService.client,
     });
     this.setActiveAccountID(0);
     this.$router.push("/");

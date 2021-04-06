@@ -5,7 +5,7 @@ import { accounts } from "./modules/accounts";
 export type Network = "http://0.0.0.0" | "http://net.ton.dev" | "http://main.ton.dev";
 class RootState {
   network: Network = "http://0.0.0.0";
-  activeAccountID: null | number = null;
+  activeAccountID = 0;
 }
 
 class RootGetters extends Getters<RootState> {
@@ -32,6 +32,7 @@ class RootActions extends Actions<RootState, RootGetters, RootMutations, RootAct
   public setNetwork(payload: Network) {
     this.mutations.setNetwork(payload);
   }
+
   public setActiveAccountID(payload: number) {
     this.mutations.setActiveAccountID(payload);
   }
