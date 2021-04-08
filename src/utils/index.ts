@@ -28,7 +28,7 @@ export function formatDate(value: number, format = "DD.MM.YYYY, HH:mm") {
   return moment(value).format(format);
 }
 
-export function baseToAssetAmount(amount: string, currency: "ETH" | "USDT" | "TON") {
+export const baseToAssetAmount = (amount: string, currency: "ETH" | "USDT" | "TON") => {
   if (!amount) return "";
   switch (currency) {
     case "ETH":
@@ -38,9 +38,9 @@ export function baseToAssetAmount(amount: string, currency: "ETH" | "USDT" | "TO
     case "USDT":
       return new BigNumber(amount).dividedBy(1000000000000000000).toFixed(18);
   }
-}
+};
 
-export function assetToBaseAmount(amount: string, currency: "ETH" | "USDT" | "TON") {
+export const assetToBaseAmount = (amount: string, currency: "ETH" | "USDT" | "TON") => {
   if (!amount) return "";
   switch (currency) {
     case "ETH":
@@ -50,7 +50,7 @@ export function assetToBaseAmount(amount: string, currency: "ETH" | "USDT" | "TO
     case "USDT":
       return new BigNumber(amount).multipliedBy(1000000000000000000).toString();
   }
-}
+};
 
 export const convertAmountToUsd = (provider: string, amount: string) => {
   switch (provider) {
@@ -62,3 +62,5 @@ export const convertAmountToUsd = (provider: string, amount: string) => {
       return new BigNumber(amount).multipliedBy("1").toFixed(3);
   }
 };
+
+export const findByIdAndReturnIndex = (array: any[], id: any) => array.findIndex((item) => item.id === id);

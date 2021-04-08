@@ -7,7 +7,7 @@
         lazy-validation
         @submit.prevent="onSubmit"
       >
-        <h1 class="mb-8">Create wallet</h1>
+        <h1 class="mb-8">Add wallet</h1>
         <VTextField
           class="mb-4"
           v-model="name"
@@ -23,7 +23,7 @@
           label="Wallet type"
           outlined
         ></VSelect>
-        <VTextField
+        <!-- <VTextField
           v-if="walletType !== 'original'"
           class="mb-4"
           v-model.trim="numberOfCustodians"
@@ -31,7 +31,7 @@
           outlined
           label="Number of custodians"
           :rules="[(v) => !!`${v}` || 'Wallet type is required']"
-        ></VTextField>
+        ></VTextField> -->
         <VSelect
           class="mb-4"
           v-model="seedPhraseWorldCount"
@@ -43,22 +43,41 @@
           ]"
         ></VSelect>
         <VTextField
+          v-for="(phrase, index) in phrases"
+          :key="index"
           class="mb-4"
-          v-model.trim="seedPhrase"
+          v-model.trim="phrases[index]"
           outlined
           hide-details
           label="Seed phrase"
-          readonly
         >
           <template v-slot:append>
-            <VBtn @click="generatePhrase" height="28" class="mr-3">
+            <VBtn @click="generate(index)" height="22" class="mr-3">
               Generate
             </VBtn>
-            <VBtn v-clipboard="() => seedPhrase" height="28" color="primary">
+            <VBtn
+              v-clipboard="() => seedPhrase"
+              height="22"
+              color="primary"
+              class="mr-1"
+            >
               Copy
             </VBtn>
-          </template></VTextField
-        >
+            <VBtn v-if="index !== 0" plain icon height="22" color="red">
+              <VIcon>mdi-minus</VIcon>
+            </VBtn>
+            <VBtn
+              v-if="index === phrases.length - 1"
+              @click="generate(index, true)"
+              plain
+              icon
+              height="22"
+              color="green"
+            >
+              <VIcon>mdi-plus</VIcon>
+            </VBtn>
+          </template>
+        </VTextField>
         <!-- <h2 class="mb-8">Password</h2>
         <VTextField
           class="mb-8"
@@ -81,8 +100,9 @@
           <VBtn
             color="primary"
             type="submit"
-            :disabled="!valid || !name || !numberOfCustodians || !seedPhrase"
-            >Create
+            :disabled="!valid || !name || isEmpty(phrases)"
+          >
+            Add
           </VBtn>
         </div>
       </VForm>
@@ -102,14 +122,17 @@ import {
 } from "@/store/modules/accounts";
 import { rootModuleMapper } from "@/store/root";
 import { tonService } from "@/background";
+import { isEmpty } from "lodash";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["network"]),
+    ...rootModuleMapper.mapGetters(["activeNetworkID"]),
+    ...accountsModuleMapper.mapGetters(["accountsCount"]),
   },
   methods: {
-    ...accountsModuleMapper.mapActions(["createNewAccount"]),
+    ...accountsModuleMapper.mapActions(["addAccount"]),
     ...rootModuleMapper.mapActions(["setActiveAccountID"]),
+    isEmpty,
   },
 });
 
@@ -120,12 +143,13 @@ export default class CreateWalletPage extends Mappers {
   valid = true;
   name = "";
   walletType: WalletType = "safe-multisig";
-  numberOfCustodians = 1;
   seedPhraseWorldCount = 12;
   seedPhrase = "";
 
   password = "";
   confirmPassword = "";
+
+  phrases: string[] = [];
 
   data() {
     return {
@@ -138,7 +162,16 @@ export default class CreateWalletPage extends Mappers {
       tonService.client,
       this.seedPhraseWorldCount
     );
-    this.seedPhrase = seedPhrase?.phrase;
+    return seedPhrase;
+  }
+
+  async generate(i: number, add: boolean) {
+    const response: any = await this.generatePhrase();
+    if (!add) {
+      this.phrases[i] = response.phrase;
+    } else {
+      this.phrases.push(response.phrase);
+    }
   }
 
   async onSubmit() {
@@ -147,21 +180,29 @@ export default class CreateWalletPage extends Mappers {
       this.seedPhrase,
       this.seedPhraseWorldCount
     );
-    const { walletType, network, name, numberOfCustodians } = this;
-    await this.createNewAccount({
-      keypair,
+    const {
       walletType,
-      network,
+      activeNetworkID,
       name,
-      numberOfCustodians,
-      client: tonService.client,
-    });
-    this.setActiveAccountID(0);
+      // numberOfCustodians,
+      accountsCount,
+    } = this;
+    // await this.addAccount({
+    //   keypair,
+    //   walletType,
+    //   activeNetworkID,
+    //   name,
+    //   numberOfCustodians,
+    //   client: tonService.client,
+    //   isRestore: false,
+    // });
+    this.setActiveAccountID(accountsCount);
     this.$router.push("/");
   }
 
   async created() {
-    this.generatePhrase();
+    const response: any = await this.generatePhrase();
+    this.phrases.push(response.phrase);
   }
 }
 </script>

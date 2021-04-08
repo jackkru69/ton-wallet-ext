@@ -22,14 +22,14 @@ export default class Inner extends Vue {
 <style lang="sass" scoped>
 .v-inner
   height: 100%
-
+  padding: 0 16px
   box-sizing: border-box
   margin: 0 auto
   flex: 1 1
   @media screen and (min-width: 375px)
     max-width: 375px
   @media screen and (min-width: 768px)
-    padding: 0 16px
+
     max-width: 1080px
   @media screen and (min-width: 1280px)
     max-width: 1080px

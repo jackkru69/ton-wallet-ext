@@ -57,7 +57,7 @@
 
       <div class="d-flex justify-center align center">
         <VBtn
-          v-if="network === 'http://0.0.0.0'"
+          v-if="activeNetworkID === 0"
           :loading="isAirdropPending"
           @click="airdrop"
           class="mr-4"
@@ -88,15 +88,12 @@ import { tonService } from "@/background";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountID", "network"]),
+    ...rootModuleMapper.mapGetters(["activeAccountID", "activeNetworkID"]),
 
     ...accountsModuleMapper.mapGetters(["getAccountById"]),
   },
   methods: {
-    ...accountsModuleMapper.mapActions([
-      "createNewAccount",
-      "updateBalanceById",
-    ]),
+    ...accountsModuleMapper.mapActions(["updateBalanceById"]),
   },
 });
 
@@ -111,9 +108,11 @@ export default class MainPage extends Mappers {
   public get account(): AccountInterface {
     return this.getAccountById(this.activeAccountID);
   }
+
   async updateBalance() {
     this.updateBalanceById({
       id: this.account.id,
+      tokenId: 0,
       client: tonService.client,
     });
   }
@@ -134,7 +133,7 @@ export default class MainPage extends Mappers {
   }
 
   transfer() {
-    if (this.account.isDeployed) {
+    if (this.account.tokens[0].isDeployed) {
       this.$router.push("/transfer");
     } else {
       this.isDeployModalOpen = true;
@@ -142,8 +141,8 @@ export default class MainPage extends Mappers {
   }
 
   public get accountAndNetwork() {
-    const { account, network } = this;
-    return { account, network };
+    const { account, activeNetworkID } = this;
+    return { account, activeNetworkID };
   }
 
   @Watch("accountAndNetwork")

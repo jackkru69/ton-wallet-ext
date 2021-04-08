@@ -11,7 +11,7 @@
           class="mr-4 pa-4 d-flex flex-column align-center justify-center"
         >
           <VIcon class="mb-4" size="40">mdi-plus</VIcon>
-          <h2>Create</h2>
+          <h2>Add</h2>
         </VCard>
         <VCard
           hover
@@ -31,10 +31,9 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
-import { VCard, VIcon } from "vuetify/lib";
 
 @Component({
-  components: { Inner, VCard, VIcon },
+  components: { Inner },
 })
 export default class InitializePage extends Vue {}
 </script>

@@ -1,7 +1,7 @@
 import { KeyPair, ResultOfMnemonicFromRandom, TonClient } from "@tonclient/core";
 import giverPackage from "./giver.package";
 
-const seedPhraseDictionaryEnglish = 1;
+export const seedPhraseDictionaryEnglish = 1;
 const hdPath = "m/44'/396'/0'/0/0";
 
 export async function generateSeed(
@@ -71,4 +71,14 @@ export async function getBalance(client: TonClient, address: string) {
     return "0";
   }
   return parseInt(result[0].balance, 16).toString();
+}
+
+export async function validateSeedPhrase(client: TonClient, seedPhrase: string, seedPhraseWorldCount: number) {
+  if (seedPhraseWorldCount === 12 || seedPhraseWorldCount === 24) {
+    return await client.crypto.mnemonic_verify({
+      phrase: seedPhrase,
+      dictionary: seedPhraseDictionaryEnglish,
+      word_count: seedPhraseWorldCount,
+    });
+  }
 }

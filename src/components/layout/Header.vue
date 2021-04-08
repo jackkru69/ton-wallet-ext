@@ -1,9 +1,11 @@
 <template>
   <v-app-bar class="v-app-bar" app :height="72" flat>
-    <img class="v-app-bar__logo mr-4" src="@/assets/img/freeton.png" alt="" />
+    <RouterLink to="/">
+      <img class="v-app-bar__logo mr-4" src="@/assets/img/freeton.png" alt="" />
+    </RouterLink>
     <VSpacer />
     <VSelect
-      :items="networks"
+      :items="networksForSelect"
       v-model="modelNetwork"
       item-text="title"
       item-value="value"
@@ -26,25 +28,28 @@
         </VBtn>
       </template>
       <VCard>
-        <v-subheader>Accounts</v-subheader>
-        <v-divider></v-divider>
-        <VList class="v-app-bar__list" max-height="228px">
-          <VListItemGroup v-model="modelActiveAccountID" color="primary">
-            <VListItem v-for="(item, i) in accounts" :key="i">
-              <VListItemContent>
-                <VListItemTitle v-text="item.name"></VListItemTitle>
-              </VListItemContent>
-            </VListItem>
-          </VListItemGroup>
-        </VList>
-        <v-divider></v-divider>
+        <template v-if="!isEmpty(accounts)">
+          <v-subheader>Accounts</v-subheader>
+          <v-divider></v-divider>
+          <VList class="v-app-bar__list" max-height="228px">
+            <VListItemGroup v-model="modelActiveAccountID" color="primary">
+              <VListItem v-for="(item, i) in accounts" :key="i">
+                <VListItemContent>
+                  <VListItemTitle v-text="item.name"></VListItemTitle>
+                </VListItemContent>
+              </VListItem>
+            </VListItemGroup>
+          </VList>
+          <v-divider></v-divider>
+        </template>
+
         <VList nav>
-          <VListItem link>
+          <VListItem link to="/initialize/create">
             <VListItemContent>
               <VListItemTitle>Add account</VListItemTitle>
             </VListItemContent>
           </VListItem>
-          <VListItem link>
+          <VListItem link to="/initialize/restore">
             <VListItemContent>
               <VListItemTitle>Restore account</VListItemTitle>
             </VListItemContent>
@@ -57,23 +62,31 @@
 
 
   <script lang="ts">
-import { accountsModuleMapper, networks } from "@/store/modules/accounts";
-import { Network, rootModuleMapper } from "@/store/root";
+import { accountsModuleMapper } from "@/store/modules/accounts";
+import { networksModuleMapper } from "@/store/modules/networks";
+
+import { rootModuleMapper } from "@/store/root";
+import { isEmpty } from "lodash";
 import { Component, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   methods: {
     ...rootModuleMapper.mapActions(["setNetwork", "setActiveAccountID"]),
+    isEmpty,
   },
   computed: {
-    ...rootModuleMapper.mapGetters(["network", "activeAccountID"]),
+    ...rootModuleMapper.mapGetters([
+      "activeNetworkID",
+      "activeAccountID",
+      "isStoreRestored",
+    ]),
     ...accountsModuleMapper.mapGetters(["accounts"]),
-
+    ...networksModuleMapper.mapGetters(["networksForSelect"]),
     modelNetwork: {
       get() {
-        return this.network;
+        return this.activeNetworkID;
       },
-      set(value: Network) {
+      set(value: number) {
         this.setNetwork(value);
       },
     },
@@ -89,13 +102,7 @@ const Mappers = Vue.extend({
 });
 
 @Component
-export default class Header extends Mappers {
-  data() {
-    return {
-      networks,
-    };
-  }
-}
+export default class Header extends Mappers {}
 </script>
 
 <style lang="sass" scoped>

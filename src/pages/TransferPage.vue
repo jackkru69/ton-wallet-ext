@@ -19,7 +19,7 @@
 
         <VTextField
           class="mb-4"
-          v-model.trim="amount"
+          v-model.trim.="amount"
           clearable
           outlined
           label="Amount"
@@ -47,7 +47,6 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
-import { VCard, VIcon, VTextField, VSelect, VForm, VBtn } from "vuetify/lib";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { rootModuleMapper } from "@/store/root";
 import { tonService } from "@/background";
@@ -62,7 +61,7 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner, VCard, VIcon, VTextField, VSelect, VForm, VBtn },
+  components: { Inner },
 })
 export default class TransferPage extends Mappers {
   valid = true;
@@ -79,6 +78,7 @@ export default class TransferPage extends Mappers {
       client: tonService.client,
       message: this.message,
     });
+    this.$router.push("/");
   }
 }
 </script>

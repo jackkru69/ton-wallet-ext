@@ -17,8 +17,6 @@ import Header from "@/components/layout/Header.vue";
 @Component({
   components: { Aside, Header },
 })
-export default class Layout extends Vue {
-  isDeployModalOpen = true;
-}
+export default class Layout extends Vue {}
 </script>
 

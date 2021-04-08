@@ -1,16 +1,22 @@
 import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-module";
 
 import { accounts } from "./modules/accounts";
+import { networks } from "./modules/networks";
 
 export type Network = "http://0.0.0.0" | "http://net.ton.dev" | "http://main.ton.dev";
 class RootState {
-  network: Network = "http://0.0.0.0";
+  isStoreRestored = false;
+  activeNetworkID = 0;
   activeAccountID = 0;
 }
 
 class RootGetters extends Getters<RootState> {
-  public get network() {
-    return this.state.network;
+  public get isStoreRestored(): boolean {
+    return this.state.isStoreRestored;
+  }
+
+  public get activeNetworkID() {
+    return this.state.activeNetworkID;
   }
 
   public get activeAccountID() {
@@ -19,8 +25,12 @@ class RootGetters extends Getters<RootState> {
 }
 
 class RootMutations extends Mutations<RootState> {
-  setNetwork(payload: Network) {
-    this.state.network = payload;
+  setIsStoreRestored(payload: boolean) {
+    this.state.isStoreRestored = payload;
+  }
+
+  setNetwork(payload: number) {
+    this.state.activeNetworkID = payload;
   }
 
   setActiveAccountID(payload: number) {
@@ -29,7 +39,11 @@ class RootMutations extends Mutations<RootState> {
 }
 
 class RootActions extends Actions<RootState, RootGetters, RootMutations, RootActions> {
-  public setNetwork(payload: Network) {
+  public setIsStoreRestored(payload: boolean) {
+    this.mutations.setIsStoreRestored(payload);
+  }
+
+  public setNetwork(payload: number) {
     this.mutations.setNetwork(payload);
   }
 
@@ -45,6 +59,7 @@ export const root = new Module({
   actions: RootActions,
   modules: {
     accounts,
+    networks,
   },
 });
 

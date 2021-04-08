@@ -4,17 +4,10 @@ import TonContract from "@/ton/ton.contract";
 import SafeMultisig from "@/contracts/SafeMultisigWallet";
 import SetCodeMultisig from "@/contracts/SetCodeMultisigWallet";
 import SetCodeMultisig2 from "@/contracts/SetCodeMultisigWallet2";
-import { Network } from "@/store/root";
-import { TonService } from "@/ton/ton.service";
 import { getBalance } from "@/ton/ton.utils";
+import { findByIdAndReturnIndex } from "../../utils/index";
 
 export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
-
-export const networks = [
-  { title: "local network", value: "http://0.0.0.0" },
-  { title: "TON mainnet network", value: "http://main.ton.dev" },
-  { title: "TON testnet network", value: "http://net.ton.dev" },
-];
 
 export const walletsTypes = [
   // {
@@ -35,33 +28,34 @@ export const walletsTypes = [
   },
 ];
 
-const contracts = {
+export const contracts = {
   // original: null,
   "safe-multisig": SafeMultisig,
   "set-code-multisig": SetCodeMultisig,
   "set-code-multisig2": SetCodeMultisig2,
 };
-
+export type TokenType = {
+  id: number;
+  walletType: string;
+  networkId: null | number;
+  name: string;
+  symbol: string;
+  address: string;
+  balance: string;
+  decimals: number;
+  numberOfCustodians: number;
+  isRestored: boolean;
+  isDeployed: boolean;
+  custodians: { public: string; secret: string }[];
+  networks: Array<number | null>;
+};
 export interface AccountInterface {
   address: string;
   walletType: WalletType;
   id: number;
-  isRestored: boolean;
-  isDeployed: boolean;
-  custodians: { public: string; secret: string }[];
   name: string;
-  networks: { id: string; server: string; explorer: string; isDev: boolean }[];
-  tokens: {
-    id: number;
-    walletType: string;
-    networkId: string;
-    name: string;
-    symbol: string;
-    address: string;
-    balance: string;
-    decimals: number;
-    numberOfCustodians: number;
-  }[];
+  keypair: KeyPair;
+  tokens: TokenType[];
 }
 class AccountsState {
   accounts: AccountInterface[] = [];
@@ -75,6 +69,10 @@ class AccountsGetters extends Getters<AccountsState> {
   public get accounts(): AccountInterface[] {
     return this.state.accounts;
   }
+
+  public get accountsCount(): number {
+    return this.state.accounts.length;
+  }
 }
 
 class AccountsMutations extends Mutations<AccountsState> {
@@ -82,94 +80,98 @@ class AccountsMutations extends Mutations<AccountsState> {
     this.state.accounts.push(payload);
   }
 
-  updateBalanceById(payload: { id: number; newBalance: string }) {
-    this.state.accounts[+payload.id].tokens[0].balance = payload.newBalance;
+  updateBalanceById(payload: { id: number; tokenId: number; newBalance: string }) {
+    const accountIndex = findByIdAndReturnIndex(this.state.accounts, payload.id);
+    this.state.accounts[accountIndex].tokens[payload.tokenId].balance = payload.newBalance;
   }
 
-  updateDeployStatus(id: number) {
-    this.state.accounts[id].isDeployed = true;
+  updateDeployStatus({ id, tokenId }: { id: number; tokenId: number }) {
+    this.state.accounts[id].tokens[tokenId].isDeployed = true;
   }
 }
 
 class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMutations, AccountsActions> {
-  public async createNewAccount(payload: {
+  public async addAccount(payload: {
     keypair: KeyPair;
     walletType: WalletType;
     name: string;
-    network: Network;
+    activeNetworkID: number | null;
     numberOfCustodians: number;
     client: TonClient;
+    isRestore: boolean;
   }) {
+    const { client, walletType, keypair, name, activeNetworkID, numberOfCustodians, isRestore } = payload;
     const contract = new TonContract({
-      client: payload.client,
-      tonPackage: contracts[payload.walletType],
-      name: payload.walletType,
-      keys: payload.keypair,
+      client: client,
+      tonPackage: contracts[walletType],
+      name: walletType,
+      keys: keypair,
     });
     const address: any = await contract.calcAddress();
 
-    const account = {
+    const account: AccountInterface = {
       address: address,
-      walletType: payload.walletType,
+      walletType: walletType,
       id: this.state.accounts.length,
-      isRestored: false,
-      isDeployed: false,
-      custodians: [payload.keypair],
-      name: payload.name,
-      networks: [{ id: payload.network, server: payload.network, explorer: payload.network, isDev: true }],
+      name: name,
+      keypair,
       tokens: [
         {
           id: 0,
-          walletType: payload.walletType,
-          networkId: payload.network,
-          name: payload.name,
+          walletType: walletType,
+          networkId: activeNetworkID,
+          name: name,
           symbol: "TON",
           address: address,
           balance: "0",
           decimals: 10,
-          numberOfCustodians: payload.numberOfCustodians,
+          numberOfCustodians: numberOfCustodians,
+          custodians: [keypair],
+          isRestored: isRestore,
+          isDeployed: false,
+          networks: [activeNetworkID],
         },
       ],
     };
     this.mutations.addAccount(account);
   }
 
-  public async updateBalanceById(payload: { id: number; client: TonClient }) {
+  public async updateBalanceById(payload: { id: number; tokenId: number; client: TonClient }) {
     const account: AccountInterface = this.getters.getAccountById(payload.id);
 
     const newBalance = await getBalance(payload.client, account.address);
-    this.mutations.updateBalanceById({ id: payload.id, newBalance });
+    this.mutations.updateBalanceById({ id: payload.id, tokenId: payload.tokenId, newBalance });
   }
 
-  public async deploy(payload: { id: any; client: TonClient }) {
-    const account: AccountInterface = this.getters.getAccountById(payload.id);
-
+  public async deploy(payload: { id: any; tokenId: number; client: TonClient }) {
+    const { id, client, tokenId } = payload;
+    const account: AccountInterface = this.getters.getAccountById(id);
     const contract = new TonContract({
-      client: payload.client,
+      client: client,
       tonPackage: contracts[account.walletType],
       name: account.walletType,
-      keys: account.custodians[0],
+      keys: account.keypair,
     });
-
+    const tokenIndex = findByIdAndReturnIndex(account.tokens, tokenId);
+    const custodians = account.tokens[tokenIndex].custodians;
     await contract.deploy({
       input: {
-        owners: [`0x${account.custodians[0].public}`],
-        reqConfirms: 1,
+        owners: custodians.map((custodian) => `0x${custodian.public}`),
+        reqConfirms: custodians.length,
       },
     });
-    this.mutations.updateDeployStatus(payload.id);
+    this.mutations.updateDeployStatus({ id, tokenId });
   }
 
   public async transfer(payload: { id: any; address: string; amount: string; message: string; client: TonClient }) {
     const account: AccountInterface = this.getters.getAccountById(payload.id);
-    console.log(payload);
     const contract = new TonContract({
       client: payload.client,
       tonPackage: contracts[account.walletType],
       name: account.walletType,
-      keys: account.custodians[0],
+      keys: account.keypair,
+      address: account.address,
     });
-
     await contract.call({
       functionName: "sendTransaction",
       input: {
