@@ -32,8 +32,16 @@
           <v-subheader>Accounts</v-subheader>
           <v-divider></v-divider>
           <VList class="v-app-bar__list" max-height="228px">
-            <VListItemGroup v-model="modelActiveAccountID" color="primary">
-              <VListItem v-for="(item, i) in accounts" :key="i">
+            <VListItemGroup
+              v-model="modelActiveAccountID"
+              @change="onChange"
+              color="primary"
+            >
+              <VListItem
+                v-for="(item, i) in accounts"
+                :key="i"
+                :disabled="modelActiveAccountID === i"
+              >
                 <VListItemContent>
                   <VListItemTitle v-text="item.name"></VListItemTitle>
                 </VListItemContent>
@@ -102,7 +110,13 @@ const Mappers = Vue.extend({
 });
 
 @Component
-export default class Header extends Mappers {}
+export default class Header extends Mappers {
+  onChange() {
+    if (this.$route.path !== "/") {
+      this.$router.push("/");
+    }
+  }
+}
 </script>
 
 <style lang="sass" scoped>

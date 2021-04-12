@@ -80,5 +80,25 @@ export async function validateSeedPhrase(client: TonClient, seedPhrase: string, 
       dictionary: seedPhraseDictionaryEnglish,
       word_count: seedPhraseWorldCount,
     });
-  }
+  } else return false;
+}
+
+export async function subscribeAndUpdateAccount(
+  client: TonClient,
+  address: string,
+  cb: (v: any) => any,
+  result = "id balance(format:DEC)"
+) {
+  return await client.net.subscribe_collection(
+    {
+      collection: "accounts",
+      filter: {
+        id: {
+          eq: address,
+        },
+      },
+      result,
+    },
+    cb
+  );
 }

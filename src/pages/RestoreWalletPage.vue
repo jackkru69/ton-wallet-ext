@@ -34,19 +34,49 @@
           ]"
           :success-messages="seedPhraseTips"
         ></VTextField>
-        <VTextField
-          v-if="!isEmpty(seedPhraseTips) && iSSeedPhraseValid"
-          class="mb-4"
-          v-model.trim="numberOfCustodians"
-          clearable
-          outlined
-          label="Number of custodians"
-          :rules="[
-            (v) => !!`${v}` || 'Number of custodian type is required',
-            (v) => v !== 0 || 'Must not be zero',
-            (v) => v <= 32 || 'Must be less than or equal to 32',
-          ]"
-        ></VTextField>
+        <div v-if="!isEmpty(seedPhraseTips) && iSSeedPhraseValid">
+          <VTextField
+            v-for="(custodian, index) in custodians"
+            :key="index"
+            class="mb-4"
+            v-model.trim="custodians[index]"
+            outlined
+            label="Custodian"
+            :rules="[(v) => !!`${v}` || 'Custodian is required']"
+          >
+            <template v-slot:append>
+              <VBtn
+                v-clipboard="() => custodian"
+                height="22"
+                color="primary"
+                class="mr-1"
+              >
+                Copy
+              </VBtn>
+              <VBtn
+                @click="deleteByIndex(index)"
+                v-if="index !== 0"
+                plain
+                icon
+                height="22"
+                color="red"
+              >
+                <VIcon>mdi-minus</VIcon>
+              </VBtn>
+              <VBtn
+                v-if="index === custodians.length - 1"
+                @click="addNewField(custodians.length)"
+                plain
+                icon
+                height="22"
+                color="green"
+              >
+                <VIcon>mdi-plus</VIcon>
+              </VBtn>
+            </template>
+          </VTextField>
+        </div>
+
         <!-- <h2 class="mb-8">Password</h2>
         <VTextField
           class="mb-8"
@@ -115,12 +145,12 @@ export default class RestoreWalletPage extends Mappers {
   walletType: WalletType = "safe-multisig";
   seedPhrase = "";
   numberOfCustodians = 1;
-
+  custodians = [""];
   password = "";
   confirmPassword = "";
   seedPhraseTips: string[] = [];
   iSSeedPhraseValid = false;
-
+  isDeployed = false;
   data() {
     return {
       walletsTypes,
@@ -136,17 +166,27 @@ export default class RestoreWalletPage extends Mappers {
     };
   }
 
+  public get seedPhraseWorldCount(): number {
+    return this.seedPhrase.split(" ").length;
+  }
+
   @Watch("onChangeSeedPhraseAndWalletTypeAndNetwork")
   async onChangeSeedPhrase() {
     try {
-      const isValid = await validateSeedPhrase(
+      const response = await validateSeedPhrase(
         tonService.client,
         this.seedPhrase,
         this.seedPhraseWorldCount
       );
-      this.iSSeedPhraseValid = !!isValid;
+
+      const isValid = response && response.valid;
+      this.iSSeedPhraseValid = isValid;
+
       if (isValid) {
         const keypair = await this.getKeypair();
+        this.custodians = [`0x${keypair.public}`];
+        this.isDeployed = false;
+
         const contract = new TonContract({
           client: tonService.client,
           name: this.walletType,
@@ -159,13 +199,18 @@ export default class RestoreWalletPage extends Mappers {
           functionName: "getCustodians",
         });
 
-        this.numberOfCustodians = response.value.custodians.length;
+        const custodians = response.value.custodians;
         this.seedPhraseTips = [];
+        if (custodians) {
+          this.isDeployed = true;
+          this.custodians = custodians.map(
+            (custodian: any) => custodian.pubkey
+          );
+          this.numberOfCustodians = custodians.length;
+        }
       }
     } catch (error) {
-      this.seedPhraseTips.push(
-        "The account is not active, enter the number of custodians"
-      );
+      this.seedPhraseTips.push("The account is not active, enter custodians");
     }
   }
 
@@ -177,8 +222,12 @@ export default class RestoreWalletPage extends Mappers {
     );
   }
 
-  public get seedPhraseWorldCount(): number {
-    return this.seedPhrase.split(" ").length;
+  addNewField(i: number) {
+    this.$set(this.custodians, i, "");
+  }
+
+  deleteByIndex(i: number) {
+    this.$delete(this.custodians, i);
   }
 
   async onSubmit() {
@@ -188,17 +237,22 @@ export default class RestoreWalletPage extends Mappers {
       name,
       numberOfCustodians,
       getKeypair,
+      custodians,
       accountsCount,
+      isDeployed,
     } = this;
     const keypair = await getKeypair();
+
     await this.addAccount({
       keypair,
+      custodians,
       walletType,
       activeNetworkID,
       name,
       numberOfCustodians,
       client: tonService.client,
-      isRestore: true,
+      isRestored: true,
+      isDeployed,
     });
 
     this.setActiveAccountID(accountsCount);

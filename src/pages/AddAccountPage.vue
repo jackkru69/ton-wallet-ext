@@ -23,15 +23,6 @@
           label="Wallet type"
           outlined
         ></VSelect>
-        <!-- <VTextField
-          v-if="walletType !== 'original'"
-          class="mb-4"
-          v-model.trim="numberOfCustodians"
-          clearable
-          outlined
-          label="Number of custodians"
-          :rules="[(v) => !!`${v}` || 'Wallet type is required']"
-        ></VTextField> -->
         <VSelect
           class="mb-4"
           v-model="seedPhraseWorldCount"
@@ -43,32 +34,54 @@
           ]"
         ></VSelect>
         <VTextField
-          v-for="(phrase, index) in phrases"
-          :key="index"
           class="mb-4"
-          v-model.trim="phrases[index]"
+          v-model.trim="seedPhrase"
           outlined
           hide-details
           label="Seed phrase"
+          readonly
         >
           <template v-slot:append>
-            <VBtn @click="generate(index)" height="22" class="mr-3">
+            <VBtn @click="generatePhrase" height="28" class="mr-3">
               Generate
             </VBtn>
+            <VBtn v-clipboard="() => seedPhrase" height="28" color="primary">
+              Copy
+            </VBtn>
+          </template></VTextField
+        >
+        <h2 class="mb-4">Custodians: {{ custodians.length }}</h2>
+        <VTextField
+          v-for="(custodian, index) in custodians"
+          :key="index"
+          class="mb-4"
+          v-model.trim="custodians[index]"
+          outlined
+          label="Custodian"
+          :rules="[(v) => !!`${v}` || 'Custodian is required']"
+        >
+          <template v-slot:append>
             <VBtn
-              v-clipboard="() => seedPhrase"
+              v-clipboard="() => custodian"
               height="22"
               color="primary"
               class="mr-1"
             >
               Copy
             </VBtn>
-            <VBtn v-if="index !== 0" plain icon height="22" color="red">
+            <VBtn
+              @click="deleteByIndex(index)"
+              v-if="index !== 0"
+              plain
+              icon
+              height="22"
+              color="red"
+            >
               <VIcon>mdi-minus</VIcon>
             </VBtn>
             <VBtn
-              v-if="index === phrases.length - 1"
-              @click="generate(index, true)"
+              v-if="index === custodians.length - 1"
+              @click="addNewField(custodians.length)"
               plain
               icon
               height="22"
@@ -100,7 +113,7 @@
           <VBtn
             color="primary"
             type="submit"
-            :disabled="!valid || !name || isEmpty(phrases)"
+            :disabled="!valid || !name || isEmpty(custodians)"
           >
             Add
           </VBtn>
@@ -111,7 +124,8 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { KeyPair } from "@tonclient/core";
 import Inner from "@/components/layout/Inner.vue";
 import { VCard, VIcon, VTextField, VSelect, VForm, VBtn } from "vuetify/lib";
 import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
@@ -148,8 +162,8 @@ export default class CreateWalletPage extends Mappers {
 
   password = "";
   confirmPassword = "";
-
-  phrases: string[] = [];
+  keypair: KeyPair;
+  custodians: string[] = [];
 
   data() {
     return {
@@ -157,52 +171,61 @@ export default class CreateWalletPage extends Mappers {
     };
   }
 
+  @Watch("seedPhraseWorldCount")
+  async onChangeSeedPhraseWorldCount() {
+    await this.generatePhrase();
+  }
+
   async generatePhrase() {
     const seedPhrase: any = await generateSeed(
       tonService.client,
       this.seedPhraseWorldCount
     );
-    return seedPhrase;
+    this.seedPhrase = seedPhrase?.phrase;
+    const keypair = await convertSeedToKeyPair(
+      tonService.client,
+      seedPhrase?.phrase,
+      this.seedPhraseWorldCount
+    );
+    this.keypair = keypair;
+    this.$set(this.custodians, 0, `0x${keypair.public}`);
   }
 
-  async generate(i: number, add: boolean) {
-    const response: any = await this.generatePhrase();
-    if (!add) {
-      this.phrases[i] = response.phrase;
-    } else {
-      this.phrases.push(response.phrase);
-    }
+  addNewField(i: number) {
+    this.$set(this.custodians, i, "");
+  }
+
+  deleteByIndex(i: number) {
+    this.$delete(this.custodians, i);
   }
 
   async onSubmit() {
-    const keypair = await convertSeedToKeyPair(
-      tonService.client,
-      this.seedPhrase,
-      this.seedPhraseWorldCount
-    );
     const {
       walletType,
       activeNetworkID,
       name,
-      // numberOfCustodians,
       accountsCount,
+      custodians,
+      keypair,
     } = this;
-    // await this.addAccount({
-    //   keypair,
-    //   walletType,
-    //   activeNetworkID,
-    //   name,
-    //   numberOfCustodians,
-    //   client: tonService.client,
-    //   isRestore: false,
-    // });
+
+    await this.addAccount({
+      keypair,
+      custodians,
+      walletType,
+      activeNetworkID,
+      name,
+      numberOfCustodians: custodians.length,
+      client: tonService.client,
+      isRestored: false,
+      isDeployed: false,
+    });
     this.setActiveAccountID(accountsCount);
     this.$router.push("/");
   }
 
   async created() {
-    const response: any = await this.generatePhrase();
-    this.phrases.push(response.phrase);
+    await this.generatePhrase();
   }
 }
 </script>

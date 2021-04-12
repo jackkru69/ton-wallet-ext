@@ -46,7 +46,7 @@ export type TokenType = {
   numberOfCustodians: number;
   isRestored: boolean;
   isDeployed: boolean;
-  custodians: { public: string; secret: string }[];
+  custodians: string[];
   networks: Array<number | null>;
 };
 export interface AccountInterface {
@@ -62,7 +62,7 @@ class AccountsState {
 }
 
 class AccountsGetters extends Getters<AccountsState> {
-  public get getAccountById(): any {
+  public get getAccountById(): (id: number) => AccountInterface | undefined {
     return (id: number) => this.state.accounts.find((acc) => acc.id === id);
   }
 
@@ -92,15 +92,28 @@ class AccountsMutations extends Mutations<AccountsState> {
 
 class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMutations, AccountsActions> {
   public async addAccount(payload: {
+    custodians: string[];
     keypair: KeyPair;
+    numberOfCustodians: number;
     walletType: WalletType;
     name: string;
     activeNetworkID: number | null;
-    numberOfCustodians: number;
     client: TonClient;
-    isRestore: boolean;
+    isRestored: boolean;
+    isDeployed: boolean;
   }) {
-    const { client, walletType, keypair, name, activeNetworkID, numberOfCustodians, isRestore } = payload;
+    const {
+      client,
+      walletType,
+      keypair,
+      numberOfCustodians,
+      name,
+      activeNetworkID,
+      isRestored,
+      isDeployed,
+      custodians,
+    } = payload;
+
     const contract = new TonContract({
       client: client,
       tonPackage: contracts[walletType],
@@ -114,7 +127,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       walletType: walletType,
       id: this.state.accounts.length,
       name: name,
-      keypair,
+      keypair: keypair,
       tokens: [
         {
           id: 0,
@@ -125,10 +138,10 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
           address: address,
           balance: "0",
           decimals: 10,
-          numberOfCustodians: numberOfCustodians,
-          custodians: [keypair],
-          isRestored: isRestore,
-          isDeployed: false,
+          numberOfCustodians,
+          custodians,
+          isRestored,
+          isDeployed,
           networks: [activeNetworkID],
         },
       ],
@@ -137,26 +150,30 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
   }
 
   public async updateBalanceById(payload: { id: number; tokenId: number; client: TonClient }) {
-    const account: AccountInterface = this.getters.getAccountById(payload.id);
+    const account: AccountInterface | undefined = this.getters.getAccountById(payload.id);
 
-    const newBalance = await getBalance(payload.client, account.address);
+    const newBalance = await getBalance(payload.client, account!.address);
     this.mutations.updateBalanceById({ id: payload.id, tokenId: payload.tokenId, newBalance });
+  }
+
+  public setBalanceByIdAndTokenId(payload: { id: number; tokenId: number; client: TonClient; newBalance: string }) {
+    this.mutations.updateBalanceById({ id: payload.id, tokenId: payload.tokenId, newBalance: payload.newBalance });
   }
 
   public async deploy(payload: { id: any; tokenId: number; client: TonClient }) {
     const { id, client, tokenId } = payload;
-    const account: AccountInterface = this.getters.getAccountById(id);
+    const account: AccountInterface | undefined = this.getters.getAccountById(id);
     const contract = new TonContract({
       client: client,
-      tonPackage: contracts[account.walletType],
-      name: account.walletType,
-      keys: account.keypair,
+      tonPackage: contracts[account!.walletType],
+      name: account!.walletType,
+      keys: account!.keypair,
     });
-    const tokenIndex = findByIdAndReturnIndex(account.tokens, tokenId);
-    const custodians = account.tokens[tokenIndex].custodians;
+    const tokenIndex = findByIdAndReturnIndex(account!.tokens, tokenId);
+    const custodians = account!.tokens[tokenIndex].custodians;
     await contract.deploy({
       input: {
-        owners: custodians.map((custodian) => `0x${custodian.public}`),
+        owners: custodians,
         reqConfirms: custodians.length,
       },
     });
@@ -164,13 +181,13 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
   }
 
   public async transfer(payload: { id: any; address: string; amount: string; message: string; client: TonClient }) {
-    const account: AccountInterface = this.getters.getAccountById(payload.id);
+    const account: AccountInterface | undefined = this.getters.getAccountById(payload.id);
     const contract = new TonContract({
       client: payload.client,
-      tonPackage: contracts[account.walletType],
-      name: account.walletType,
-      keys: account.keypair,
-      address: account.address,
+      tonPackage: contracts[account!.walletType],
+      name: account!.walletType,
+      keys: account!.keypair,
+      address: account!.address,
     });
     await contract.call({
       functionName: "sendTransaction",

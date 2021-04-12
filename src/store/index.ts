@@ -47,7 +47,15 @@ export const store = createStore(root, {
 
   plugins: [
     createMutationsSharer({
-      predicate: ["setNetwork", "setIsStoreRestored"],
+      predicate: [
+        "accounts/addAccount",
+        "accounts/updateBalanceById",
+        "accounts/updateDeployStatus",
+        "networks/addNetwork",
+        "setActiveAccountID",
+        "setIsStoreRestored",
+        "setNetwork",
+      ],
     }),
     vuexLocal.plugin,
   ],

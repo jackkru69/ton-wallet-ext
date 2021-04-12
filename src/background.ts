@@ -38,6 +38,5 @@ store.subscribe((mutation, state) => {
     console.log(state);
     const network = store.getters["networks/getNetworkById"](mutation.payload);
     tonService.setNetwork(network.server);
-    console.log("background.js/tonService", tonService);
   }
 });

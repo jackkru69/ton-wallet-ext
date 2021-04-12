@@ -19,7 +19,7 @@
 
         <VTextField
           class="mb-4"
-          v-model.trim.="amount"
+          v-model.trim="amount"
           clearable
           outlined
           label="Amount"

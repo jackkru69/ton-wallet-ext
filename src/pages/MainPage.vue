@@ -85,11 +85,15 @@ import { rootModuleMapper } from "@/store/root";
 import { baseToAssetAmount, sliceString } from "@/utils";
 import { sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
+import { store } from "@/store";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountID", "activeNetworkID"]),
-
+    ...rootModuleMapper.mapGetters([
+      "activeAccountID",
+      "activeNetworkID",
+      "isStoreRestored",
+    ]),
     ...accountsModuleMapper.mapGetters(["getAccountById"]),
   },
   methods: {
@@ -105,23 +109,27 @@ export default class MainPage extends Mappers {
   isAirdropPending = false;
   isDeployModalOpen = false;
 
-  public get account(): AccountInterface {
+  public get account(): AccountInterface | undefined {
     return this.getAccountById(this.activeAccountID);
   }
+  public get accountAndNetwork() {
+    const { activeAccountID, activeNetworkID } = this;
+    return { activeAccountID, activeNetworkID };
+  }
 
-  async updateBalance() {
-    this.updateBalanceById({
-      id: this.account.id,
-      tokenId: 0,
-      client: tonService.client,
-    });
+  @Watch("accountAndNetwork")
+  async onChangeAccount() {
+    if (this.isStoreRestored) {
+      const account = this.getAccountById(this.activeAccountID);
+      await this.updateBalance(account!.id);
+    }
   }
 
   async airdrop() {
     try {
       this.isAirdropPending = true;
       await sendGrams(tonService.client, {
-        dest: this.account.address,
+        dest: this.account!.address,
         amount: "10000000000",
       });
       this.isAirdropPending = false;
@@ -133,25 +141,26 @@ export default class MainPage extends Mappers {
   }
 
   transfer() {
-    if (this.account.tokens[0].isDeployed) {
+    if (this.account!.tokens[0].isDeployed) {
       this.$router.push("/transfer");
     } else {
       this.isDeployModalOpen = true;
     }
   }
-
-  public get accountAndNetwork() {
-    const { account, activeNetworkID } = this;
-    return { account, activeNetworkID };
+  async updateBalance(id: number) {
+    await this.updateBalanceById({
+      id,
+      tokenId: 0,
+      client: tonService.client,
+    });
   }
 
-  @Watch("accountAndNetwork")
-  onChangeAccount() {
-    this.updateBalance();
-  }
-
-  created() {
-    this.updateBalance();
+  async created() {
+    // @ts-ignore
+    store.restored.then(async () => {
+      const account = this.getAccountById(this.activeAccountID);
+      await this.updateBalance(account!.id);
+    });
   }
 }
 </script>
