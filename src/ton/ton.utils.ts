@@ -1,4 +1,4 @@
-import { KeyPair, ResultOfMnemonicFromRandom, TonClient } from "@tonclient/core";
+import { KeyPair, ResultOfMnemonicFromRandom, SortDirection, TonClient } from "@tonclient/core";
 import giverPackage from "./giver.package";
 
 export const seedPhraseDictionaryEnglish = 1;
@@ -60,19 +60,6 @@ export const sendGrams = async (client: TonClient, input: TSendGramsInput) => {
   }
 };
 
-export async function getBalance(client: TonClient, address: string) {
-  if (!address) throw new Error("address not specified");
-  const { result } = await client.net.query_collection({
-    collection: "accounts",
-    filter: { id: { eq: address } },
-    result: "id balance",
-  });
-  if (!result[0]) {
-    return "0";
-  }
-  return parseInt(result[0].balance, 16).toString();
-}
-
 export async function validateSeedPhrase(client: TonClient, seedPhrase: string, seedPhraseWorldCount: number) {
   if (seedPhraseWorldCount === 12 || seedPhraseWorldCount === 24) {
     return await client.crypto.mnemonic_verify({
@@ -83,7 +70,20 @@ export async function validateSeedPhrase(client: TonClient, seedPhrase: string, 
   } else return false;
 }
 
-export async function subscribeAndUpdateAccount(
+export async function getBalance(client: TonClient, address: string) {
+  if (!address) throw new Error("address not specified");
+  const { result } = await client.net.query_collection({
+    collection: "accounts",
+    filter: { id: { eq: address } },
+    result: "id balance(format:DEC)",
+  });
+  if (!result[0]) {
+    return "0";
+  }
+  return result[0].balance;
+}
+
+export async function subscribeAccount(
   client: TonClient,
   address: string,
   cb: (v: any) => any,
@@ -101,4 +101,20 @@ export async function subscribeAndUpdateAccount(
     },
     cb
   );
+}
+
+export async function getAccountTxs(client: TonClient, address: string) {
+  if (!address) throw new Error("address not specified");
+  const { result } = await client.net.query_collection({
+    collection: "transactions",
+    filter: { account_addr: { eq: address }, balance_delta: { ne: "0x0" } },
+    order: [
+      { path: "now", direction: SortDirection.DESC },
+      { path: "lt", direction: SortDirection.DESC },
+    ],
+    limit: 10,
+    result:
+      "id account_addr status_name tr_type_name balance_delta(format:DEC) in_message { id msg_type_name status_name src dst value(format:DEC) } out_messages { id msg_type_name status_name src dst value(format:DEC) } now",
+  });
+  return result;
 }

@@ -54,7 +54,9 @@
           }}
         </h1>
       </div>
-
+      <div class="d-flex justify-center my-4">
+        <h3>Custodians {{ account.tokens[0].custodians.length }}</h3>
+      </div>
       <div class="d-flex justify-center align center">
         <VBtn
           v-if="activeNetworkID === 0"
@@ -66,6 +68,17 @@
         >
         <VBtn @click="transfer" icon><VIcon :width="40">mdi-send</VIcon></VBtn>
       </div>
+
+      <VTabs grow v-model="tab" class="my-8">
+        <VTabsSlider></VTabsSlider>
+        <VTab value="txs" key="txs"> Transactions </VTab>
+        <VTab value="tokens" key="tokens"> Tokens </VTab>
+      </VTabs>
+      <VDataTable
+        :headers="headers"
+        :items="tokenTxs"
+        :items-per-page="5"
+      ></VDataTable>
     </Inner>
   </div>
 </template>
@@ -78,12 +91,13 @@ import DeployModal from "@/components/DeployModal.vue";
 import { VCard } from "vuetify/lib";
 import {
   AccountInterface,
+  accounts,
   accountsModuleMapper,
 } from "@/store/modules/accounts";
 
 import { rootModuleMapper } from "@/store/root";
 import { baseToAssetAmount, sliceString } from "@/utils";
-import { sendGrams } from "@/ton/ton.utils";
+import { getAccountTxs, sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
 import { store } from "@/store";
 
@@ -94,10 +108,14 @@ const Mappers = Vue.extend({
       "activeNetworkID",
       "isStoreRestored",
     ]),
-    ...accountsModuleMapper.mapGetters(["getAccountById"]),
+    ...accountsModuleMapper.mapGetters([
+      "getAccountById",
+      "getFormattedTxsById",
+    ]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["updateBalanceById"]),
+    ...accountsModuleMapper.mapMutations(["setTransactions"]),
   },
 });
 
@@ -108,10 +126,35 @@ const Mappers = Vue.extend({
 export default class MainPage extends Mappers {
   isAirdropPending = false;
   isDeployModalOpen = false;
+  tab = "txs";
+
+  headers = [
+    {
+      text: "id",
+      value: "fId",
+    },
+    {
+      text: "src",
+      value: "fSrc",
+    },
+    {
+      text: "dst",
+      value: "fDst",
+    },
+    {
+      text: "value",
+      value: "fValue",
+    },
+  ];
 
   public get account(): AccountInterface | undefined {
     return this.getAccountById(this.activeAccountID);
   }
+
+  public get tokenTxs(): any[] | undefined {
+    return this.getFormattedTxsById(this.activeAccountID, 0);
+  }
+
   public get accountAndNetwork() {
     const { activeAccountID, activeNetworkID } = this;
     return { activeAccountID, activeNetworkID };
@@ -122,6 +165,15 @@ export default class MainPage extends Mappers {
     if (this.isStoreRestored) {
       const account = this.getAccountById(this.activeAccountID);
       await this.updateBalance(account!.id);
+      const responseTxs = await getAccountTxs(
+        tonService.client,
+        account!.address
+      );
+      this.setTransactions({
+        id: account!.id,
+        tokenId: 0,
+        transactions: responseTxs,
+      });
     }
   }
 
@@ -141,7 +193,7 @@ export default class MainPage extends Mappers {
   }
 
   transfer() {
-    if (this.account!.tokens[0].isDeployed) {
+    if (this.account!.tokens[0].networks.includes(this.activeNetworkID)) {
       this.$router.push("/transfer");
     } else {
       this.isDeployModalOpen = true;
@@ -160,6 +212,15 @@ export default class MainPage extends Mappers {
     store.restored.then(async () => {
       const account = this.getAccountById(this.activeAccountID);
       await this.updateBalance(account!.id);
+      const responseTxs = await getAccountTxs(
+        tonService.client,
+        account!.address
+      );
+      this.setTransactions({
+        id: account!.id,
+        tokenId: 0,
+        transactions: responseTxs,
+      });
     });
   }
 }

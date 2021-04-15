@@ -145,7 +145,8 @@ const Mappers = Vue.extend({
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
-    ...rootModuleMapper.mapActions(["setActiveAccountID"]),
+    ...accountsModuleMapper.mapMutations(["addNetworkToToken"]),
+    ...rootModuleMapper.mapMutations(["setActiveAccountID"]),
     isEmpty,
   },
 });
@@ -217,14 +218,12 @@ export default class CreateWalletPage extends Mappers {
       name,
       numberOfCustodians: custodians.length,
       client: tonService.client,
-      isRestored: false,
-      isDeployed: false,
     });
     this.setActiveAccountID(accountsCount);
     this.$router.push("/");
   }
 
-  async created() {
+  async mounted() {
     await this.generatePhrase();
   }
 }

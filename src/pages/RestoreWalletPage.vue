@@ -130,7 +130,8 @@ const Mappers = Vue.extend({
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
-    ...rootModuleMapper.mapActions(["setActiveAccountID"]),
+    ...accountsModuleMapper.mapMutations(["addNetworkToToken"]),
+    ...rootModuleMapper.mapMutations(["setActiveAccountID"]),
   },
 });
 
@@ -251,9 +252,15 @@ export default class RestoreWalletPage extends Mappers {
       name,
       numberOfCustodians,
       client: tonService.client,
-      isRestored: true,
-      isDeployed,
     });
+
+    if (isDeployed) {
+      this.addNetworkToToken({
+        id: accountsCount,
+        tokenId: 0,
+        networkId: activeNetworkID,
+      });
+    }
 
     this.setActiveAccountID(accountsCount);
     this.$router.push("/");

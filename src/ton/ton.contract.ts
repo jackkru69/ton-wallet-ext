@@ -217,6 +217,6 @@ export default class TonContract {
     if (!result[0]) {
       return "";
     }
-    return parseInt(result[0].balance, 16);
+    return result[0].balance;
   }
 }

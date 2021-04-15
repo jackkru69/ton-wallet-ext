@@ -28,7 +28,7 @@
     "tests/**/*.tsx",
     "src/custom.d.ts",
     "src/background.ts",
-    "src/content-script.ts"
+    "src/content-script.js"
   ],
   "exclude": ["node_modules"]
 }

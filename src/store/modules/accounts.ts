@@ -5,7 +5,9 @@ import SafeMultisig from "@/contracts/SafeMultisigWallet";
 import SetCodeMultisig from "@/contracts/SetCodeMultisigWallet";
 import SetCodeMultisig2 from "@/contracts/SetCodeMultisigWallet2";
 import { getBalance } from "@/ton/ton.utils";
-import { findByIdAndReturnIndex } from "../../utils/index";
+import { baseToAssetAmount, findByIdAndReturnIndex, sliceString } from "../../utils/index";
+import { BigNumber } from "bignumber.js";
+import { isEmpty } from "lodash";
 
 export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
 
@@ -34,20 +36,18 @@ export const contracts = {
   "set-code-multisig": SetCodeMultisig,
   "set-code-multisig2": SetCodeMultisig2,
 };
+
 export type TokenType = {
   id: number;
-  walletType: string;
-  networkId: null | number;
   name: string;
   symbol: string;
   address: string;
   balance: string;
   decimals: number;
   numberOfCustodians: number;
-  isRestored: boolean;
-  isDeployed: boolean;
   custodians: string[];
   networks: Array<number | null>;
+  transactions: any[];
 };
 export interface AccountInterface {
   address: string;
@@ -57,13 +57,63 @@ export interface AccountInterface {
   keypair: KeyPair;
   tokens: TokenType[];
 }
+
+export type TxType = {
+  account_addr: string;
+  balance_delta: string;
+  id: string;
+  in_message: {
+    dst: string;
+    id: string;
+    msg_type_name: string;
+    src: string;
+    status_name: string;
+    value: string;
+  };
+  out_messages: {
+    dst: string;
+    id: string;
+    msg_type_name: string;
+    src: string;
+    status_name: string;
+    value: string;
+  }[];
+  now: number;
+  status_name: string;
+  tr_type_name: string;
+};
+
 class AccountsState {
   accounts: AccountInterface[] = [];
 }
 
+const formatTx = (tx: TxType) => {
+  // const isNegative = new BigNumber(tx.balance_delta).isNegative();
+  return {
+    ...tx,
+    fId: sliceString(tx.id),
+    // fSrc: isNegative ? sliceString(tx.account_addr) : sliceString(tx.in_message.src),
+    // fDst:
+    //   !isNegative && isEmpty(tx.out_messages) ? sliceString(tx.in_message.dst) : sliceString(tx.out_messages[0].dst),
+    fValue: baseToAssetAmount(tx.balance_delta, "TON"),
+  };
+};
+
 class AccountsGetters extends Getters<AccountsState> {
   public get getAccountById(): (id: number) => AccountInterface | undefined {
     return (id: number) => this.state.accounts.find((acc) => acc.id === id);
+  }
+
+  public get getTokenById(): (id: number, tokenId: number) => TokenType | undefined {
+    return (id, tokenId) => {
+      const accountIndex = findByIdAndReturnIndex(this.state.accounts, id);
+      const tokenIndex = findByIdAndReturnIndex(this.state.accounts[accountIndex].tokens, tokenId);
+      return this.state.accounts[accountIndex].tokens[tokenIndex];
+    };
+  }
+
+  public get getFormattedTxsById(): (id: number, tokenId: number) => TxType[] | undefined {
+    return (id, tokenId) => this.getters.getTokenById(id, tokenId)?.transactions.map((tx) => formatTx(tx));
   }
 
   public get accounts(): AccountInterface[] {
@@ -80,13 +130,22 @@ class AccountsMutations extends Mutations<AccountsState> {
     this.state.accounts.push(payload);
   }
 
-  updateBalanceById(payload: { id: number; tokenId: number; newBalance: string }) {
-    const accountIndex = findByIdAndReturnIndex(this.state.accounts, payload.id);
-    this.state.accounts[accountIndex].tokens[payload.tokenId].balance = payload.newBalance;
+  updateBalanceById({ id, tokenId, newBalance }: { id: number; tokenId: number; newBalance: string }) {
+    const accountIndex = findByIdAndReturnIndex(this.state.accounts, id);
+    const tokenIndex = findByIdAndReturnIndex(this.state.accounts[accountIndex].tokens, tokenId);
+    this.state.accounts[accountIndex].tokens[tokenIndex].balance = newBalance;
   }
 
-  updateDeployStatus({ id, tokenId }: { id: number; tokenId: number }) {
-    this.state.accounts[id].tokens[tokenId].isDeployed = true;
+  addNetworkToToken({ id, tokenId, networkId }: { id: number; tokenId: number; networkId: number }) {
+    if (!this.state.accounts[id].tokens[tokenId].networks.includes(networkId)) {
+      this.state.accounts[id].tokens[tokenId].networks.push(networkId);
+    }
+  }
+
+  setTransactions({ id, tokenId, transactions }: { id: number; tokenId: number; transactions: any[] }) {
+    const accountIndex = findByIdAndReturnIndex(this.state.accounts, id);
+    const tokenIndex = findByIdAndReturnIndex(this.state.accounts[accountIndex].tokens, tokenId);
+    this.state.accounts[accountIndex].tokens[tokenIndex].transactions = transactions;
   }
 }
 
@@ -99,20 +158,8 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     name: string;
     activeNetworkID: number | null;
     client: TonClient;
-    isRestored: boolean;
-    isDeployed: boolean;
   }) {
-    const {
-      client,
-      walletType,
-      keypair,
-      numberOfCustodians,
-      name,
-      activeNetworkID,
-      isRestored,
-      isDeployed,
-      custodians,
-    } = payload;
+    const { client, walletType, keypair, numberOfCustodians, name, custodians } = payload;
 
     const contract = new TonContract({
       client: client,
@@ -131,8 +178,6 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       tokens: [
         {
           id: 0,
-          walletType: walletType,
-          networkId: activeNetworkID,
           name: name,
           symbol: "TON",
           address: address,
@@ -140,9 +185,8 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
           decimals: 10,
           numberOfCustodians,
           custodians,
-          isRestored,
-          isDeployed,
-          networks: [activeNetworkID],
+          networks: [],
+          transactions: [],
         },
       ],
     };
@@ -160,8 +204,17 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     this.mutations.updateBalanceById({ id: payload.id, tokenId: payload.tokenId, newBalance: payload.newBalance });
   }
 
-  public async deploy(payload: { id: any; tokenId: number; client: TonClient }) {
-    const { id, client, tokenId } = payload;
+  public async deploy({
+    id,
+    client,
+    tokenId,
+    networkId,
+  }: {
+    id: any;
+    tokenId: number;
+    networkId: number;
+    client: TonClient;
+  }) {
     const account: AccountInterface | undefined = this.getters.getAccountById(id);
     const contract = new TonContract({
       client: client,
@@ -177,10 +230,16 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         reqConfirms: custodians.length,
       },
     });
-    this.mutations.updateDeployStatus({ id, tokenId });
+    this.mutations.addNetworkToToken({ id, tokenId, networkId });
   }
 
-  public async transfer(payload: { id: any; address: string; amount: string; message: string; client: TonClient }) {
+  public async transferOrProposeTransfer(payload: {
+    id: any;
+    address: string;
+    amount: string;
+    message: string;
+    client: TonClient;
+  }) {
     const account: AccountInterface | undefined = this.getters.getAccountById(payload.id);
     const contract = new TonContract({
       client: payload.client,
@@ -189,16 +248,30 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       keys: account!.keypair,
       address: account!.address,
     });
-    await contract.call({
-      functionName: "sendTransaction",
-      input: {
-        dest: payload.address,
-        value: payload.amount,
-        bounce: false,
-        flags: 1,
-        payload: payload.message,
-      },
-    });
+    if (account!.tokens[0].custodians.length > 1) {
+      const response = await contract.call({
+        functionName: "submitTransaction",
+        input: {
+          dest: payload.address,
+          value: payload.amount,
+          bounce: true,
+          allBalance: false,
+          payload: payload.message,
+        },
+      });
+      console.log(response);
+    } else {
+      await contract.call({
+        functionName: "sendTransaction",
+        input: {
+          dest: payload.address,
+          value: payload.amount,
+          bounce: false,
+          flags: 1,
+          payload: payload.message,
+        },
+      });
+    }
   }
 }
 

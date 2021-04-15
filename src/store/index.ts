@@ -37,7 +37,7 @@ const browserLocalStorage = {
     }),
 };
 
-const vuexLocal = new VuexPersistence({
+export const vuexLocal = new VuexPersistence({
   storage: browserLocalStorage,
   asyncStorage: true,
 });
@@ -49,12 +49,14 @@ export const store = createStore(root, {
     createMutationsSharer({
       predicate: [
         "accounts/addAccount",
+        "accounts/addNetworkToToken",
+        "accounts/setTransactions",
         "accounts/updateBalanceById",
-        "accounts/updateDeployStatus",
         "networks/addNetwork",
         "setActiveAccountID",
         "setIsStoreRestored",
         "setNetwork",
+        "setSubscriptionBalanceHandle",
       ],
     }),
     vuexLocal.plugin,

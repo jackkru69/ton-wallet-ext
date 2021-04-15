@@ -8,6 +8,8 @@ class RootState {
   isStoreRestored = false;
   activeNetworkID = 0;
   activeAccountID = 0;
+  subscriptionBalanceHandle: number | null = null;
+  subscriptionTxsHandle: number | null = null;
 }
 
 class RootGetters extends Getters<RootState> {
@@ -22,8 +24,15 @@ class RootGetters extends Getters<RootState> {
   public get activeAccountID() {
     return this.state.activeAccountID;
   }
-}
 
+  public get subscriptionBalanceHandle(): number | null {
+    return this.state.subscriptionBalanceHandle;
+  }
+
+  public get subscriptionTxsHandle(): number | null {
+    return this.state.subscriptionTxsHandle;
+  }
+}
 class RootMutations extends Mutations<RootState> {
   setIsStoreRestored(payload: boolean) {
     this.state.isStoreRestored = payload;
@@ -36,21 +45,13 @@ class RootMutations extends Mutations<RootState> {
   setActiveAccountID(payload: number) {
     this.state.activeAccountID = payload;
   }
-}
 
-class RootActions extends Actions<RootState, RootGetters, RootMutations, RootActions> {
-  public setIsStoreRestored(payload: boolean) {
-    this.mutations.setIsStoreRestored(payload);
-  }
-
-  public setNetwork(payload: number) {
-    this.mutations.setNetwork(payload);
-  }
-
-  public setActiveAccountID(payload: number) {
-    this.mutations.setActiveAccountID(payload);
+  setSubscriptionBalanceHandle(payload: number | null) {
+    this.state.subscriptionBalanceHandle = payload;
   }
 }
+
+class RootActions extends Actions<RootState, RootGetters, RootMutations, RootActions> {}
 
 export const root = new Module({
   state: RootState,

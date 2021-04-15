@@ -17,6 +17,8 @@
     "core-js": "^3.6.5",
     "global": "^4.4.0",
     "moment": "^2.29.1",
+    "post-message-stream": "^3.0.0",
+    "remove-files-webpack-plugin": "^1.4.4",
     "tondev": "^0.4.0",
     "v-click-outside": "^3.1.2",
     "vue": "^2.6.11",

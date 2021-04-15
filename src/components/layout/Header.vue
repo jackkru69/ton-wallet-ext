@@ -79,7 +79,7 @@ import { Component, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   methods: {
-    ...rootModuleMapper.mapActions(["setNetwork", "setActiveAccountID"]),
+    ...rootModuleMapper.mapMutations(["setNetwork", "setActiveAccountID"]),
     isEmpty,
   },
   computed: {

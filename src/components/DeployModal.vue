@@ -41,6 +41,7 @@ export default class DeployModal extends Mappers {
         id: this.activeAccountID,
         client: tonService.client,
         tokenId: 0,
+        networkId: this.activeNetworkID,
       });
       this.isPending = false;
       this.model = false;

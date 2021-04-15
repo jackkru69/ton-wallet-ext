@@ -1,7 +1,7 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/no-var-requires */
 const CopyPlugin = require("copy-webpack-plugin");
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require("path");
+const RemovePlugin = require("remove-files-webpack-plugin");
 
 module.exports = {
   transpileDependencies: ["vuetify", "vuex-persist"],
@@ -14,6 +14,11 @@ module.exports = {
           toType: "dir",
         },
       ]),
+      new RemovePlugin({
+        after: {
+          include: ["./dist/injection.html"],
+        },
+      }),
     ],
   },
   pages: {
@@ -26,6 +31,9 @@ module.exports = {
       entry: "./src/standalone/main.ts",
       filename: "index.html",
     },
+    injection: {
+      entry: "./src/injection.js",
+    },
   },
   pluginOptions: {
     browserExtension: {
@@ -35,7 +43,7 @@ module.exports = {
         },
         contentScripts: {
           entries: {
-            "content-script": ["src/content-script.ts"],
+            "content-script": ["src/content-script.js"],
           },
         },
       },

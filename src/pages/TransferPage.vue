@@ -56,7 +56,7 @@ const Mappers = Vue.extend({
     ...rootModuleMapper.mapGetters(["activeAccountID"]),
   },
   methods: {
-    ...accountsModuleMapper.mapActions(["transfer"]),
+    ...accountsModuleMapper.mapActions(["transferOrProposeTransfer"]),
   },
 });
 
@@ -71,7 +71,7 @@ export default class TransferPage extends Mappers {
   message = "";
 
   async onSubmit() {
-    await this.transfer({
+    await this.transferOrProposeTransfer({
       id: this.activeAccountID,
       address: this.address,
       amount: this.amount,
