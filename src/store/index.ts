@@ -48,12 +48,15 @@ export const store = createStore(root, {
   plugins: [
     createMutationsSharer({
       predicate: [
-        "accounts/addAccount",
-        "accounts/addNetworkToToken",
+        "accounts/addAccountMut",
+        "accounts/addNetworkToAccount",
+        "accounts/deleteAccount",
+        "accounts/setIsExist",
+        "accounts/setPendingTransactions",
         "accounts/setTransactions",
         "accounts/updateBalanceById",
         "networks/addNetwork",
-        "setActiveAccountID",
+        "setActiveAccountAddress",
         "setIsStoreRestored",
         "setNetwork",
         "setSubscriptionBalanceHandle",

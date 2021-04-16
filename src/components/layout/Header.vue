@@ -32,15 +32,11 @@
           <v-subheader>Accounts</v-subheader>
           <v-divider></v-divider>
           <VList class="v-app-bar__list" max-height="228px">
-            <VListItemGroup
-              v-model="modelActiveAccountID"
-              @change="onChange"
-              color="primary"
-            >
+            <VListItemGroup v-model="modelActiveAccountAddress" color="primary">
               <VListItem
-                v-for="(item, i) in accounts"
-                :key="i"
-                :disabled="modelActiveAccountID === i"
+                v-for="item in accounts"
+                :key="item.address"
+                :value="item.address"
               >
                 <VListItemContent>
                   <VListItemTitle v-text="item.name"></VListItemTitle>
@@ -79,13 +75,13 @@ import { Component, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   methods: {
-    ...rootModuleMapper.mapMutations(["setNetwork", "setActiveAccountID"]),
+    ...rootModuleMapper.mapMutations(["setNetwork", "setActiveAccountAddress"]),
     isEmpty,
   },
   computed: {
     ...rootModuleMapper.mapGetters([
       "activeNetworkID",
-      "activeAccountID",
+      "activeAccountAddress",
       "isStoreRestored",
     ]),
     ...accountsModuleMapper.mapGetters(["accounts"]),
@@ -98,12 +94,12 @@ const Mappers = Vue.extend({
         this.setNetwork(value);
       },
     },
-    modelActiveAccountID: {
+    modelActiveAccountAddress: {
       get() {
-        return this.activeAccountID;
+        return this.activeAccountAddress;
       },
-      set(value: number) {
-        this.setActiveAccountID(value);
+      set(value: string) {
+        this.setActiveAccountAddress(value);
       },
     },
   },

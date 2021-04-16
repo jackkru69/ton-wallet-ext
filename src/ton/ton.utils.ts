@@ -118,3 +118,19 @@ export async function getAccountTxs(client: TonClient, address: string) {
   });
   return result;
 }
+
+export async function checkDeployStatus(client: TonClient, address: string, statuses: number[]) {
+  if (!address) throw new Error("address not specified");
+  const { result } = await client.net.query_collection({
+    collection: "accounts",
+    filter: {
+      id: {
+        eq: address,
+      },
+    },
+    result: "acc_type",
+  });
+  if (result[0]) {
+    return statuses.includes(result[0].acc_type);
+  } else return false;
+}

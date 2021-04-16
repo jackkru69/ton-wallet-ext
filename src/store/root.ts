@@ -7,7 +7,7 @@ export type Network = "http://0.0.0.0" | "http://net.ton.dev" | "http://main.ton
 class RootState {
   isStoreRestored = false;
   activeNetworkID = 0;
-  activeAccountID = 0;
+  activeAccountAddress: string | undefined = undefined;
   subscriptionBalanceHandle: number | null = null;
   subscriptionTxsHandle: number | null = null;
 }
@@ -21,8 +21,8 @@ class RootGetters extends Getters<RootState> {
     return this.state.activeNetworkID;
   }
 
-  public get activeAccountID() {
-    return this.state.activeAccountID;
+  public get activeAccountAddress() {
+    return this.state.activeAccountAddress;
   }
 
   public get subscriptionBalanceHandle(): number | null {
@@ -42,8 +42,8 @@ class RootMutations extends Mutations<RootState> {
     this.state.activeNetworkID = payload;
   }
 
-  setActiveAccountID(payload: number) {
-    this.state.activeAccountID = payload;
+  setActiveAccountAddress(address: string | undefined) {
+    this.state.activeAccountAddress = address;
   }
 
   setSubscriptionBalanceHandle(payload: number | null) {

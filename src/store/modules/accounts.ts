@@ -1,13 +1,18 @@
-import { Getters, Mutations, Actions, Module, createMapper, Context } from "vuex-smart-module";
+import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-module";
 import { KeyPair, TonClient } from "@tonclient/core";
 import TonContract from "@/ton/ton.contract";
 import SafeMultisig from "@/contracts/SafeMultisigWallet";
 import SetCodeMultisig from "@/contracts/SetCodeMultisigWallet";
 import SetCodeMultisig2 from "@/contracts/SetCodeMultisigWallet2";
 import { getBalance } from "@/ton/ton.utils";
-import { baseToAssetAmount, findByIdAndReturnIndex, sliceString } from "../../utils/index";
-import { BigNumber } from "bignumber.js";
-import { isEmpty } from "lodash";
+import {
+  baseToAssetAmount,
+  findAccByAddressAndReturnIndex,
+  findTokenBySymbolAndReturnIndex,
+  sliceString,
+} from "../../utils/index";
+import Vue from "vue";
+import { Store } from "vuex";
 
 export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
 
@@ -38,24 +43,22 @@ export const contracts = {
 };
 
 export type TokenType = {
-  id: number;
   name: string;
   symbol: string;
-  address: string;
   balance: string;
   decimals: number;
-  numberOfCustodians: number;
-  custodians: string[];
-  networks: Array<number | null>;
   transactions: any[];
+  pendingTransactions: any[];
 };
 export interface AccountInterface {
   address: string;
   walletType: WalletType;
-  id: number;
   name: string;
   keypair: KeyPair;
+  custodians: string[];
   tokens: TokenType[];
+  networks: Array<number | null>;
+  isExist: boolean;
 }
 
 export type TxType = {
@@ -83,6 +86,20 @@ export type TxType = {
   tr_type_name: string;
 };
 
+export type TxPendingType = {
+  bounce: boolean;
+  confirmationsMask: string;
+  creator: string;
+  dest: string;
+  id: string;
+  index: string;
+  payload: string;
+  sendFlags: string;
+  signsReceived: string;
+  signsRequired: string;
+  value: string;
+};
+
 class AccountsState {
   accounts: AccountInterface[] = [];
 }
@@ -99,21 +116,38 @@ const formatTx = (tx: TxType) => {
   };
 };
 
+const formatPendingTx = (tx: TxPendingType) => {
+  // const isNegative = new BigNumber(tx.balance_delta).isNegative();
+  return {
+    ...tx,
+    fId: sliceString(tx.id),
+  };
+};
+
 class AccountsGetters extends Getters<AccountsState> {
-  public get getAccountById(): (id: number) => AccountInterface | undefined {
-    return (id: number) => this.state.accounts.find((acc) => acc.id === id);
+  public get getAccountByAddress(): (address: string | undefined) => AccountInterface | undefined {
+    return (address: string | undefined) => this.state.accounts.find((acc) => acc.address === address);
   }
 
-  public get getTokenById(): (id: number, tokenId: number) => TokenType | undefined {
-    return (id, tokenId) => {
-      const accountIndex = findByIdAndReturnIndex(this.state.accounts, id);
-      const tokenIndex = findByIdAndReturnIndex(this.state.accounts[accountIndex].tokens, tokenId);
+  public get getTokenBySymbol(): (id: string | undefined, symbol: string) => TokenType | undefined {
+    return (address, symbol) => {
+      const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+      const tokenIndex = findTokenBySymbolAndReturnIndex(this.state.accounts[accountIndex].tokens, symbol);
       return this.state.accounts[accountIndex].tokens[tokenIndex];
     };
   }
 
-  public get getFormattedTxsById(): (id: number, tokenId: number) => TxType[] | undefined {
-    return (id, tokenId) => this.getters.getTokenById(id, tokenId)?.transactions.map((tx) => formatTx(tx));
+  public get getFormattedTxsByAddress(): (address: string | undefined, symbol: string) => TxType[] | undefined {
+    return (address, tokenId) =>
+      this.getters.getTokenBySymbol(address, tokenId)?.transactions.map((tx) => formatTx(tx));
+  }
+
+  public get getFormattedPendingTxsByAddress(): (
+    address: string | undefined,
+    symbol: string
+  ) => TxPendingType[] | undefined {
+    return (address, tokenId) =>
+      this.getters.getTokenBySymbol(address, tokenId)?.pendingTransactions.map((tx) => formatPendingTx(tx));
   }
 
   public get accounts(): AccountInterface[] {
@@ -126,41 +160,85 @@ class AccountsGetters extends Getters<AccountsState> {
 }
 
 class AccountsMutations extends Mutations<AccountsState> {
-  addAccount(payload: AccountInterface) {
+  addAccountMut(payload: AccountInterface) {
     this.state.accounts.push(payload);
   }
 
-  updateBalanceById({ id, tokenId, newBalance }: { id: number; tokenId: number; newBalance: string }) {
-    const accountIndex = findByIdAndReturnIndex(this.state.accounts, id);
-    const tokenIndex = findByIdAndReturnIndex(this.state.accounts[accountIndex].tokens, tokenId);
+  updateBalanceById({
+    address,
+    symbol,
+    newBalance,
+  }: {
+    address: string | undefined;
+    symbol: string;
+    newBalance: string;
+  }) {
+    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+    const tokenIndex = findTokenBySymbolAndReturnIndex(this.state.accounts[accountIndex].tokens, symbol);
     this.state.accounts[accountIndex].tokens[tokenIndex].balance = newBalance;
   }
 
-  addNetworkToToken({ id, tokenId, networkId }: { id: number; tokenId: number; networkId: number }) {
-    if (!this.state.accounts[id].tokens[tokenId].networks.includes(networkId)) {
-      this.state.accounts[id].tokens[tokenId].networks.push(networkId);
+  addNetworkToAccount({ address, networkId }: { address: string | undefined; networkId: number }) {
+    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+    if (!this.state.accounts[accountIndex].networks.includes(networkId)) {
+      this.state.accounts[accountIndex].networks.push(networkId);
     }
   }
 
-  setTransactions({ id, tokenId, transactions }: { id: number; tokenId: number; transactions: any[] }) {
-    const accountIndex = findByIdAndReturnIndex(this.state.accounts, id);
-    const tokenIndex = findByIdAndReturnIndex(this.state.accounts[accountIndex].tokens, tokenId);
+  setTransactions({ address, symbol, transactions }: { address: string; symbol: string; transactions: any[] }) {
+    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+    const tokenIndex = findTokenBySymbolAndReturnIndex(this.state.accounts[accountIndex].tokens, symbol);
     this.state.accounts[accountIndex].tokens[tokenIndex].transactions = transactions;
+  }
+
+  setPendingTransactions({
+    address,
+    symbol,
+    pendingTransactions,
+  }: {
+    address: string | undefined;
+    symbol: string;
+    pendingTransactions: any[];
+  }) {
+    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+    const tokenIndex = findTokenBySymbolAndReturnIndex(this.state.accounts[accountIndex].tokens, symbol);
+    this.state.accounts[accountIndex].tokens[tokenIndex].pendingTransactions = pendingTransactions;
+  }
+
+  deleteAccount(address: string | undefined) {
+    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+    Vue.delete(this.state.accounts, accountIndex);
+  }
+
+  setIsExist({ address, exist }: { address: string | undefined; exist: boolean }) {
+    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+    this.state.accounts[accountIndex].isExist = exist;
   }
 }
 
 class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMutations, AccountsActions> {
-  public async addAccount(payload: {
+  store!: Store<any>;
+
+  $init(store: Store<any>): void {
+    this.store = store;
+  }
+  public async addAccount({
+    custodians,
+    keypair,
+    walletType,
+    name,
+    network,
+    client,
+    isDeployed,
+  }: {
     custodians: string[];
     keypair: KeyPair;
-    numberOfCustodians: number;
     walletType: WalletType;
     name: string;
-    activeNetworkID: number | null;
+    network: number | null;
     client: TonClient;
+    isDeployed?: boolean;
   }) {
-    const { client, walletType, keypair, numberOfCustodians, name, custodians } = payload;
-
     const contract = new TonContract({
       client: client,
       tonPackage: contracts[walletType],
@@ -168,107 +246,132 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       keys: keypair,
     });
     const address: any = await contract.calcAddress();
-
     const account: AccountInterface = {
       address: address,
       walletType: walletType,
-      id: this.state.accounts.length,
       name: name,
       keypair: keypair,
+      custodians,
+      networks: isDeployed ? [network] : [],
+      isExist: !!isDeployed,
       tokens: [
         {
-          id: 0,
           name: name,
           symbol: "TON",
-          address: address,
           balance: "0",
           decimals: 10,
-          numberOfCustodians,
-          custodians,
-          networks: [],
           transactions: [],
+          pendingTransactions: [],
         },
       ],
     };
-    this.mutations.addAccount(account);
+    this.mutations.addAccountMut(account);
+    this.store.commit("setActiveAccountAddress", address);
   }
 
-  public async updateBalanceById(payload: { id: number; tokenId: number; client: TonClient }) {
-    const account: AccountInterface | undefined = this.getters.getAccountById(payload.id);
+  public async updateBalanceByAddress({
+    address,
+    symbol,
+    client,
+  }: {
+    address: string | undefined;
+    symbol: string;
+    client: TonClient;
+  }) {
+    const account: AccountInterface | undefined = this.getters.getAccountByAddress(address);
 
-    const newBalance = await getBalance(payload.client, account!.address);
-    this.mutations.updateBalanceById({ id: payload.id, tokenId: payload.tokenId, newBalance });
+    const newBalance = await getBalance(client, account!.address);
+    this.mutations.updateBalanceById({ address, symbol, newBalance });
   }
 
-  public setBalanceByIdAndTokenId(payload: { id: number; tokenId: number; client: TonClient; newBalance: string }) {
-    this.mutations.updateBalanceById({ id: payload.id, tokenId: payload.tokenId, newBalance: payload.newBalance });
+  public setBalanceByAddressAndTokenSymbol({
+    address,
+    symbol,
+    newBalance,
+  }: {
+    address: string | undefined;
+    symbol: string;
+    newBalance: string;
+  }) {
+    this.mutations.updateBalanceById({ address, symbol, newBalance: newBalance });
   }
 
   public async deploy({
-    id,
+    address,
     client,
-    tokenId,
     networkId,
   }: {
-    id: any;
-    tokenId: number;
+    address: string | undefined;
+    symbol: string;
     networkId: number;
     client: TonClient;
   }) {
-    const account: AccountInterface | undefined = this.getters.getAccountById(id);
+    const account: AccountInterface | undefined = this.getters.getAccountByAddress(address);
     const contract = new TonContract({
       client: client,
       tonPackage: contracts[account!.walletType],
       name: account!.walletType,
       keys: account!.keypair,
     });
-    const tokenIndex = findByIdAndReturnIndex(account!.tokens, tokenId);
-    const custodians = account!.tokens[tokenIndex].custodians;
+    const custodians = account!.custodians;
     await contract.deploy({
       input: {
         owners: custodians,
         reqConfirms: custodians.length,
       },
     });
-    this.mutations.addNetworkToToken({ id, tokenId, networkId });
+    this.mutations.addNetworkToAccount({ address, networkId });
   }
 
-  public async transferOrProposeTransfer(payload: {
-    id: any;
-    address: string;
+  public async transferOrProposeTransfer({
+    addressFrom,
+    addressTo,
+    amount,
+    message,
+    client,
+  }: {
+    addressFrom: string;
+    addressTo: string;
     amount: string;
     message: string;
     client: TonClient;
   }) {
-    const account: AccountInterface | undefined = this.getters.getAccountById(payload.id);
+    const account: AccountInterface | undefined = this.getters.getAccountByAddress(addressFrom);
     const contract = new TonContract({
-      client: payload.client,
+      client,
       tonPackage: contracts[account!.walletType],
       name: account!.walletType,
       keys: account!.keypair,
       address: account!.address,
     });
-    if (account!.tokens[0].custodians.length > 1) {
-      const response = await contract.call({
+    if (account!.custodians.length > 1) {
+      await contract.call({
         functionName: "submitTransaction",
         input: {
-          dest: payload.address,
-          value: payload.amount,
+          dest: addressTo,
+          value: amount,
           bounce: true,
           allBalance: false,
-          payload: payload.message,
+          payload: message,
         },
       });
-      console.log(response);
+      const response = await contract.run({
+        functionName: "getTransactions",
+      });
+      this.mutations.setPendingTransactions({
+        address: addressFrom,
+        symbol: "TON",
+        pendingTransactions: response.value.transactions,
+      });
     } else {
       await contract.call({
         functionName: "sendTransaction",
         input: {
-          dest: payload.address,
-          value: payload.amount,
+          dest: addressTo,
+          value: amount,
           bounce: false,
           flags: 1,
-          payload: payload.message,
+          payload: message,
         },
       });
     }

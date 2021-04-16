@@ -53,7 +53,7 @@ import { tonService } from "@/background";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountID"]),
+    ...rootModuleMapper.mapGetters(["activeAccountAddress"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["transferOrProposeTransfer"]),
@@ -71,14 +71,16 @@ export default class TransferPage extends Mappers {
   message = "";
 
   async onSubmit() {
-    await this.transferOrProposeTransfer({
-      id: this.activeAccountID,
-      address: this.address,
-      amount: this.amount,
-      client: tonService.client,
-      message: this.message,
-    });
-    this.$router.push("/");
+    if (this.activeAccountAddress) {
+      await this.transferOrProposeTransfer({
+        addressFrom: this.activeAccountAddress,
+        addressTo: this.address,
+        amount: this.amount,
+        client: tonService.client,
+        message: this.message,
+      });
+      this.$router.push("/");
+    }
   }
 }
 </script>

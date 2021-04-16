@@ -63,4 +63,8 @@ export const convertAmountToUsd = (provider: string, amount: string) => {
   }
 };
 
-export const findByIdAndReturnIndex = (array: any[], id: any) => array.findIndex((item) => item.id === id);
+export const findAccByAddressAndReturnIndex = (array: any[], address: any) =>
+  array.findIndex((item) => item.address === address);
+
+export const findTokenBySymbolAndReturnIndex = (array: any[], symbol: any) =>
+  array.findIndex((item) => item.symbol === symbol);

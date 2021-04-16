@@ -141,12 +141,10 @@ import { isEmpty } from "lodash";
 const Mappers = Vue.extend({
   computed: {
     ...rootModuleMapper.mapGetters(["activeNetworkID"]),
-    ...accountsModuleMapper.mapGetters(["accountsCount"]),
+    ...accountsModuleMapper.mapGetters(["getAccountByAddress"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
-    ...accountsModuleMapper.mapMutations(["addNetworkToToken"]),
-    ...rootModuleMapper.mapMutations(["setActiveAccountID"]),
     isEmpty,
   },
 });
@@ -201,25 +199,15 @@ export default class CreateWalletPage extends Mappers {
   }
 
   async onSubmit() {
-    const {
-      walletType,
-      activeNetworkID,
-      name,
-      accountsCount,
-      custodians,
-      keypair,
-    } = this;
-
+    const { walletType, activeNetworkID, name, custodians, keypair } = this;
     await this.addAccount({
       keypair,
       custodians,
       walletType,
-      activeNetworkID,
+      network: activeNetworkID,
       name,
-      numberOfCustodians: custodians.length,
       client: tonService.client,
     });
-    this.setActiveAccountID(accountsCount);
     this.$router.push("/");
   }
 

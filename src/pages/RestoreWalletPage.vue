@@ -123,15 +123,16 @@ import { convertSeedToKeyPair, validateSeedPhrase } from "@/ton/ton.utils";
 import TonContract from "@/ton/ton.contract";
 import { KeyPair } from "@tonclient/core";
 import { isEmpty } from "lodash";
+import { uuid } from "vue-uuid";
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountID", "activeNetworkID"]),
+    ...rootModuleMapper.mapGetters(["activeAccountAddress", "activeNetworkID"]),
     ...accountsModuleMapper.mapGetters(["accountsCount"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
-    ...accountsModuleMapper.mapMutations(["addNetworkToToken"]),
-    ...rootModuleMapper.mapMutations(["setActiveAccountID"]),
+    ...accountsModuleMapper.mapMutations(["addNetworkToAccount"]),
+    ...rootModuleMapper.mapMutations(["setActiveAccountAddress"]),
   },
 });
 
@@ -236,33 +237,20 @@ export default class RestoreWalletPage extends Mappers {
       walletType,
       activeNetworkID,
       name,
-      numberOfCustodians,
       getKeypair,
       custodians,
-      accountsCount,
       isDeployed,
     } = this;
     const keypair = await getKeypair();
-
     await this.addAccount({
       keypair,
       custodians,
       walletType,
-      activeNetworkID,
+      network: activeNetworkID,
       name,
-      numberOfCustodians,
       client: tonService.client,
+      isDeployed,
     });
-
-    if (isDeployed) {
-      this.addNetworkToToken({
-        id: accountsCount,
-        tokenId: 0,
-        networkId: activeNetworkID,
-      });
-    }
-
-    this.setActiveAccountID(accountsCount);
     this.$router.push("/");
   }
 }

@@ -7,7 +7,7 @@
           <template v-slot:activator="{ on, attrs }">
             <VBtn
               plain
-              v-clipboard="() => account.address"
+              v-clipboard="() => account && account.address"
               class="v-main-page__menu-bar-selected-account"
               v-bind="attrs"
               v-on="on"
@@ -15,8 +15,8 @@
             >
               <template v-slot:default>
                 <div>
-                  <div>{{ account.name }}</div>
-                  <div>{{ sliceString(account.address) }}</div>
+                  <div>{{ account && account.name }}</div>
+                  <div>{{ account && sliceString(account.address) }}</div>
                 </div>
               </template>
             </VBtn>
@@ -41,6 +41,9 @@
             <VListItem link>
               <VListItemTitle>explorer</VListItemTitle>
             </VListItem>
+            <VListItem @click="onClickDeleteAccount">
+              <VListItemTitle>delete</VListItemTitle>
+            </VListItem>
           </VList>
         </VMenu>
       </div>
@@ -48,14 +51,15 @@
       <div class="d-flex justify-center my-4">
         <h1>
           {{
+            account &&
             baseToAssetAmount(account.tokens[0].balance, "TON") +
-            " " +
-            account.tokens[0].symbol
+              " " +
+              account.tokens[0].symbol
           }}
         </h1>
       </div>
       <div class="d-flex justify-center my-4">
-        <h3>Custodians {{ account.tokens[0].custodians.length }}</h3>
+        <h3>Custodians {{ account && account.custodians.length }}</h3>
       </div>
       <div class="d-flex justify-center align center">
         <VBtn
@@ -71,51 +75,76 @@
 
       <VTabs grow v-model="tab" class="my-8">
         <VTabsSlider></VTabsSlider>
-        <VTab value="txs" key="txs"> Transactions </VTab>
-        <VTab value="tokens" key="tokens"> Tokens </VTab>
+        <VTab v-for="item in items" :key="item.tab" value="ptxs">
+          {{ item.title }}
+        </VTab>
       </VTabs>
-      <VDataTable
-        :headers="headers"
-        :items="tokenTxs"
-        :items-per-page="5"
-      ></VDataTable>
+      <VTabsItems v-model="tab">
+        <VTabItem key="ptxs">
+          <VDataTable
+            :headers="headersPendingTxs"
+            :items="pendingTxs"
+            :items-per-page="5"
+          ></VDataTable>
+        </VTabItem>
+        <VTabItem key="txs">
+          <VDataTable
+            :headers="headersTxs"
+            :items="txs"
+            :items-per-page="5"
+          ></VDataTable>
+        </VTabItem>
+        <VTabItem key="tokens">
+          <VDataTable
+            :headers="[]"
+            :items="[]"
+            :items-per-page="5"
+          ></VDataTable>
+        </VTabItem>
+      </VTabsItems>
     </Inner>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import DeployModal from "@/components/DeployModal.vue";
 
 import { VCard } from "vuetify/lib";
 import {
   AccountInterface,
-  accounts,
   accountsModuleMapper,
 } from "@/store/modules/accounts";
 
 import { rootModuleMapper } from "@/store/root";
 import { baseToAssetAmount, sliceString } from "@/utils";
-import { getAccountTxs, sendGrams } from "@/ton/ton.utils";
+import { sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
-import { store } from "@/store";
 
 const Mappers = Vue.extend({
   computed: {
     ...rootModuleMapper.mapGetters([
-      "activeAccountID",
+      "activeAccountAddress",
       "activeNetworkID",
       "isStoreRestored",
     ]),
     ...accountsModuleMapper.mapGetters([
-      "getAccountById",
-      "getFormattedTxsById",
+      "getAccountByAddress",
+      "getFormattedTxsByAddress",
+      "getFormattedPendingTxsByAddress",
+      "accountsCount",
+      "accounts",
     ]),
   },
   methods: {
-    ...accountsModuleMapper.mapActions(["updateBalanceById"]),
-    ...accountsModuleMapper.mapMutations(["setTransactions"]),
+    ...accountsModuleMapper.mapActions(["updateBalanceByAddress"]),
+    ...accountsModuleMapper.mapMutations([
+      "setTransactions",
+      "deleteAccount",
+      "setPendingTransactions",
+    ]),
+    ...rootModuleMapper.mapMutations(["setActiveAccountAddress"]),
   },
 });
 
@@ -126,9 +155,21 @@ const Mappers = Vue.extend({
 export default class MainPage extends Mappers {
   isAirdropPending = false;
   isDeployModalOpen = false;
-  tab = "txs";
+  tab = "ptxs";
 
-  headers = [
+  items = [
+    {
+      title: "Pending transactions",
+      tab: "ptxs",
+    },
+    {
+      title: "Transactions",
+      tab: "txs",
+    },
+    { title: "Tokens", tab: "tokens" },
+  ];
+
+  headersTxs = [
     {
       text: "id",
       value: "fId",
@@ -147,88 +188,80 @@ export default class MainPage extends Mappers {
     },
   ];
 
+  headersPendingTxs = [
+    {
+      text: "id",
+      value: "fId",
+    },
+    {
+      text: "creator",
+      value: "creator",
+    },
+    {
+      text: "dest",
+      value: "dest",
+    },
+  ];
+
   public get account(): AccountInterface | undefined {
-    return this.getAccountById(this.activeAccountID);
+    return this.getAccountByAddress(this.activeAccountAddress);
   }
 
-  public get tokenTxs(): any[] | undefined {
-    return this.getFormattedTxsById(this.activeAccountID, 0);
+  public get txs(): any[] | undefined {
+    return this.getFormattedTxsByAddress(this.activeAccountAddress, "TON");
+  }
+
+  public get pendingTxs(): any[] | undefined {
+    return this.getFormattedPendingTxsByAddress(
+      this.activeAccountAddress,
+      "TON"
+    );
   }
 
   public get accountAndNetwork() {
-    const { activeAccountID, activeNetworkID } = this;
-    return { activeAccountID, activeNetworkID };
-  }
-
-  @Watch("accountAndNetwork")
-  async onChangeAccount() {
-    if (this.isStoreRestored) {
-      const account = this.getAccountById(this.activeAccountID);
-      await this.updateBalance(account!.id);
-      const responseTxs = await getAccountTxs(
-        tonService.client,
-        account!.address
-      );
-      this.setTransactions({
-        id: account!.id,
-        tokenId: 0,
-        transactions: responseTxs,
-      });
-    }
+    const { activeAccountAddress, activeNetworkID } = this;
+    return { activeAccountAddress, activeNetworkID };
   }
 
   async airdrop() {
-    try {
-      this.isAirdropPending = true;
-      await sendGrams(tonService.client, {
-        dest: this.account!.address,
-        amount: "10000000000",
-      });
-      this.isAirdropPending = false;
-    } catch (error) {
-      this.isAirdropPending = false;
-      console.error(error);
-      throw new Error(error);
+    if (this.account) {
+      try {
+        this.isAirdropPending = true;
+        await sendGrams(tonService.client, {
+          dest: this.account.address,
+          amount: "10000000000",
+        });
+        this.isAirdropPending = false;
+      } catch (error) {
+        this.isAirdropPending = false;
+        console.error(error);
+        throw new Error(error);
+      }
     }
   }
 
   transfer() {
-    if (this.account!.tokens[0].networks.includes(this.activeNetworkID)) {
-      this.$router.push("/transfer");
-    } else {
-      this.isDeployModalOpen = true;
+    if (this.account) {
+      if (this.account.networks.includes(this.activeNetworkID)) {
+        this.$router.push("/transfer");
+      } else {
+        this.isDeployModalOpen = true;
+      }
     }
   }
-  async updateBalance(id: number) {
-    await this.updateBalanceById({
-      id,
-      tokenId: 0,
-      client: tonService.client,
-    });
-  }
 
-  async created() {
-    // @ts-ignore
-    store.restored.then(async () => {
-      const account = this.getAccountById(this.activeAccountID);
-      await this.updateBalance(account!.id);
-      const responseTxs = await getAccountTxs(
-        tonService.client,
-        account!.address
-      );
-      this.setTransactions({
-        id: account!.id,
-        tokenId: 0,
-        transactions: responseTxs,
-      });
-    });
+  onClickDeleteAccount() {
+    if (this.accountsCount <= 1) {
+      this.deleteAccount(this.activeAccountAddress);
+      this.$router.push("/initialize");
+    } else {
+      this.deleteAccount(this.activeAccountAddress);
+      const address = this.accounts[0].address;
+      if (address) this.setActiveAccountAddress(address);
+    }
   }
 }
 </script>
-
-
-
-
 
 <style lang="sass">
 .v-main-page

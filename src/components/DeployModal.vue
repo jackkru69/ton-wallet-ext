@@ -21,7 +21,7 @@ import { Component, VModel, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountID", "activeNetworkID"]),
+    ...rootModuleMapper.mapGetters(["activeAccountAddress", "activeNetworkID"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["deploy"]),
@@ -38,9 +38,9 @@ export default class DeployModal extends Mappers {
     try {
       this.isPending = true;
       await this.deploy({
-        id: this.activeAccountID,
+        address: this.activeAccountAddress,
         client: tonService.client,
-        tokenId: 0,
+        symbol: "TON",
         networkId: this.activeNetworkID,
       });
       this.isPending = false;

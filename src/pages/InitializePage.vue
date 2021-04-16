@@ -52,8 +52,7 @@ const Mappers = Vue.extend({
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
-    ...accountsModuleMapper.mapMutations(["addNetworkToToken"]),
-    ...rootModuleMapper.mapMutations(["setActiveAccountID"]),
+    ...rootModuleMapper.mapMutations(["setActiveAccountAddress"]),
   },
 });
 
@@ -73,12 +72,10 @@ export default class InitializePage extends Mappers {
       keypair,
       custodians: [`0x${keypair.public}`],
       walletType: "set-code-multisig2",
-      activeNetworkID,
+      network: activeNetworkID,
       name: `Account ${accountsCount + 1}`,
-      numberOfCustodians: 1,
       client: tonService.client,
     });
-    this.setActiveAccountID(accountsCount);
     this.$router.push("/");
   }
 }
