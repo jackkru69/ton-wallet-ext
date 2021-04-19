@@ -1,6 +1,10 @@
 <template>
   <div class="v-main-page">
     <DeployModal v-model="isDeployModalOpen" />
+    <CustodiansModal
+      v-model="isCustodiansModalOpen"
+      :custodians="account.custodians || []"
+    />
     <Inner>
       <div class="v-main-page__menu-bar">
         <VTooltip bottom>
@@ -59,7 +63,9 @@
         </h1>
       </div>
       <div class="d-flex justify-center my-4">
-        <h3>Custodians {{ account && account.custodians.length }}</h3>
+        <h3 role="button" aria-pressed="" @click="isCustodiansModalOpen = true">
+          Custodians {{ account && account.custodians.length }}
+        </h3>
       </div>
       <div class="d-flex justify-center align center">
         <VBtn
@@ -109,7 +115,8 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
-import DeployModal from "@/components/DeployModal.vue";
+import DeployModal from "@/components/modals/DeployModal.vue";
+import CustodiansModal from "@/components/modals/CustodiansModal.vue";
 
 import { VCard } from "vuetify/lib";
 import {
@@ -149,12 +156,14 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner, VCard, DeployModal },
+  components: { Inner, VCard, DeployModal, CustodiansModal },
   methods: { sliceString, baseToAssetAmount },
 })
 export default class MainPage extends Mappers {
   isAirdropPending = false;
   isDeployModalOpen = false;
+  isCustodiansModalOpen = false;
+
   tab = "ptxs";
 
   items = [
@@ -265,6 +274,7 @@ export default class MainPage extends Mappers {
 
 <style lang="sass">
 .v-main-page
+
   &__menu-bar
     display: grid
     grid-template-columns: 30% minmax(30%, 1fr) 30%

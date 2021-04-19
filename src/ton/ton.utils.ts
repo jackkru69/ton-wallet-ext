@@ -1,8 +1,8 @@
 import { KeyPair, ResultOfMnemonicFromRandom, SortDirection, TonClient } from "@tonclient/core";
 import giverPackage from "./giver.package";
 
-export const seedPhraseDictionaryEnglish = 1;
-const hdPath = "m/44'/396'/0'/0/0";
+export const SEED_PHRASE_DICTIONARY_ENGLISH = 1;
+export const HD_PATH = "m/44'/396'/0'/0/0";
 
 export async function generateSeed(
   client: TonClient,
@@ -10,7 +10,7 @@ export async function generateSeed(
 ): Promise<ResultOfMnemonicFromRandom> {
   try {
     return await client.crypto.mnemonic_from_random({
-      dictionary: seedPhraseDictionaryEnglish,
+      dictionary: SEED_PHRASE_DICTIONARY_ENGLISH,
       word_count: seedPhraseWorldCount,
     });
   } catch (err) {
@@ -26,10 +26,10 @@ export async function convertSeedToKeyPair(
 ): Promise<KeyPair> {
   try {
     return await client.crypto.mnemonic_derive_sign_keys({
-      dictionary: seedPhraseDictionaryEnglish,
+      dictionary: SEED_PHRASE_DICTIONARY_ENGLISH,
       word_count: seedPhraseWorldCount,
       phrase: seedPhrase,
-      path: hdPath,
+      path: HD_PATH,
     });
   } catch (err) {
     console.error(err);
@@ -64,7 +64,7 @@ export async function validateSeedPhrase(client: TonClient, seedPhrase: string, 
   if (seedPhraseWorldCount === 12 || seedPhraseWorldCount === 24) {
     return await client.crypto.mnemonic_verify({
       phrase: seedPhrase,
-      dictionary: seedPhraseDictionaryEnglish,
+      dictionary: SEED_PHRASE_DICTIONARY_ENGLISH,
       word_count: seedPhraseWorldCount,
     });
   } else return false;

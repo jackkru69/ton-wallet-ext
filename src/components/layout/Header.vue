@@ -37,6 +37,7 @@
                 v-for="item in accounts"
                 :key="item.address"
                 :value="item.address"
+                :disabled="item.address === activeAccountAddress"
               >
                 <VListItemContent>
                   <VListItemTitle v-text="item.name"></VListItemTitle>
