@@ -76,24 +76,27 @@
             </template>
           </VTextField>
         </div>
-
-        <!-- <h2 class="mb-8">Password</h2>
         <VTextField
-          class="mb-8"
+          class="mb-4"
           v-model.trim="password"
           clearable
+          :rules="[(v) => !!v || 'Password is required']"
           outlined
-          hide-details
           label="Password"
+          :error-messages="passwordErrors"
         ></VTextField>
         <VTextField
-          class="mb-8"
+          v-if="accountsCount === 0"
+          class="mb-4"
           v-model.trim="confirmPassword"
           clearable
+          :rules="[
+            (v) => !!v || 'Confirm password is required',
+            (v) => password === v || 'Passwords don\'t match',
+          ]"
           outlined
-          hide-details
           label="Confirm password"
-        ></VTextField> -->
+        ></VTextField>
         <div class="d-flex justify-end">
           <VBtn to="/initialize" class="mr-4"> Back </VBtn>
           <VBtn
@@ -117,22 +120,24 @@ import {
   walletsTypes,
   contracts,
 } from "@/store/modules/accounts";
-import { rootModuleMapper } from "@/store/root";
+import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
 import { convertSeedToKeyPair, validateSeedPhrase } from "@/ton/ton.utils";
 import TonContract from "@/ton/ton.contract";
 import { KeyPair } from "@tonclient/core";
 import { isEmpty } from "lodash";
-import { uuid } from "vue-uuid";
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountAddress", "activeNetworkID"]),
+    ...walletModuleMapper.mapGetters([
+      "activeAccountAddress",
+      "activeNetworkID",
+    ]),
     ...accountsModuleMapper.mapGetters(["accountsCount"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
     ...accountsModuleMapper.mapMutations(["addNetworkToAccount"]),
-    ...rootModuleMapper.mapMutations(["setActiveAccountAddress"]),
+    ...walletModuleMapper.mapMutations(["setActiveAccountAddress"]),
   },
 });
 

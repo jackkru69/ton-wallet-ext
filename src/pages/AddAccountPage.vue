@@ -37,7 +37,6 @@
           class="mb-4"
           v-model.trim="seedPhrase"
           outlined
-          hide-details
           label="Seed phrase"
           readonly
         >
@@ -50,6 +49,27 @@
             </VBtn>
           </template></VTextField
         >
+        <VTextField
+          class="mb-4"
+          v-model.trim="password"
+          clearable
+          :rules="[(v) => !!v || 'Password is required']"
+          outlined
+          label="Password"
+          :error-messages="passwordErrors"
+        ></VTextField>
+        <VTextField
+          v-if="accountsCount === 0"
+          class="mb-4"
+          v-model.trim="confirmPassword"
+          clearable
+          :rules="[
+            (v) => !!v || 'Confirm password is required',
+            (v) => password === v || 'Passwords don\'t match',
+          ]"
+          outlined
+          label="Confirm password"
+        ></VTextField>
         <h2 class="mb-4">Custodians: {{ custodians.length }}</h2>
         <VTextField
           v-for="(custodian, index) in custodians"
@@ -91,23 +111,7 @@
             </VBtn>
           </template>
         </VTextField>
-        <!-- <h2 class="mb-8">Password</h2>
-        <VTextField
-          class="mb-8"
-          v-model.trim="password"
-          clearable
-          outlined
-          hide-details
-          label="Password"
-        ></VTextField>
-        <VTextField
-          class="mb-8"
-          v-model.trim="confirmPassword"
-          clearable
-          outlined
-          hide-details
-          label="Confirm password"
-        ></VTextField> -->
+
         <div class="d-flex justify-end">
           <VBtn to="/initialize" class="mr-4"> Back </VBtn>
           <VBtn
@@ -134,17 +138,24 @@ import {
   walletsTypes,
   WalletType,
 } from "@/store/modules/accounts";
-import { rootModuleMapper } from "@/store/root";
+import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
 import { isEmpty } from "lodash";
+import { keystoreModuleMapper } from "@/store/modules/keystore";
+import { rootModuleMapper } from "@/store/root";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeNetworkID"]),
-    ...accountsModuleMapper.mapGetters(["getAccountByAddress"]),
+    ...walletModuleMapper.mapGetters(["activeNetworkID"]),
+    ...accountsModuleMapper.mapGetters([
+      "getAccountByAddress",
+      "accountsCount",
+    ]),
+    ...keystoreModuleMapper.mapGetters(["getKeyIDs", "getPrivateKeyData"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
+    ...rootModuleMapper.mapMutations(["setIsLocked"]),
     isEmpty,
   },
 });
@@ -161,6 +172,9 @@ export default class CreateWalletPage extends Mappers {
 
   password = "";
   confirmPassword = "";
+
+  passwordErrors: string[] = [];
+
   keypair: KeyPair;
   custodians: string[] = [];
 
@@ -168,6 +182,13 @@ export default class CreateWalletPage extends Mappers {
     return {
       walletsTypes,
     };
+  }
+
+  @Watch("password")
+  onChangePassword() {
+    if (this.passwordErrors.length) {
+      this.passwordErrors = [];
+    }
   }
 
   @Watch("seedPhraseWorldCount")
@@ -199,16 +220,32 @@ export default class CreateWalletPage extends Mappers {
   }
 
   async onSubmit() {
-    const { walletType, activeNetworkID, name, custodians, keypair } = this;
-    await this.addAccount({
-      keypair,
-      custodians,
+    const {
       walletType,
-      network: activeNetworkID,
+      activeNetworkID,
       name,
-      client: tonService.client,
-    });
-    this.$router.push("/");
+      custodians,
+      keypair,
+      password,
+    } = this;
+    try {
+      if (this.accountsCount > 0) {
+        this.getPrivateKeyData(this.getKeyIDs[0], this.password);
+      }
+
+      await this.addAccount({
+        keypair,
+        custodians,
+        walletType,
+        network: activeNetworkID,
+        name,
+        client: tonService.client,
+        password,
+      });
+      this.$router.push("/");
+    } catch (error) {
+      this.passwordErrors = ["Invalid password"];
+    }
   }
 
   async mounted() {

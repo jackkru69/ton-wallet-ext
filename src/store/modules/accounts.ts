@@ -54,7 +54,6 @@ export interface AccountInterface {
   address: string;
   walletType: WalletType;
   name: string;
-  keypair: KeyPair;
   custodians: string[];
   tokens: TokenType[];
   networks: Array<number | null>;
@@ -230,6 +229,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     network,
     client,
     isDeployed,
+    password,
   }: {
     custodians: string[];
     keypair: KeyPair;
@@ -238,6 +238,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     network: number | null;
     client: TonClient;
     isDeployed?: boolean;
+    password: string;
   }) {
     const contract = new TonContract({
       client: client,
@@ -246,11 +247,17 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       keys: keypair,
     });
     const address: any = await contract.calcAddress();
+    this.store.dispatch("keystore/saveKey", {
+      keyID: address,
+      password,
+      publicData: keypair.public,
+      privateData: keypair.secret,
+    });
+    this.store.commit("setIsLocked", false);
     const account: AccountInterface = {
       address: address,
       walletType: walletType,
       name: name,
-      keypair: keypair,
       custodians,
       networks: isDeployed ? [network] : [],
       isExist: !!isDeployed,
@@ -266,7 +273,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       ],
     };
     this.mutations.addAccountMut(account);
-    this.store.commit("setActiveAccountAddress", address);
+    this.store.commit("wallet/setActiveAccountAddress", address);
   }
 
   public async updateBalanceByAddress({
@@ -307,20 +314,22 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     client: TonClient;
   }) {
     const account: AccountInterface | undefined = this.getters.getAccountByAddress(address);
-    const contract = new TonContract({
-      client: client,
-      tonPackage: contracts[account!.walletType],
-      name: account!.walletType,
-      keys: account!.keypair,
-    });
-    const custodians = account!.custodians;
-    await contract.deploy({
-      input: {
-        owners: custodians,
-        reqConfirms: custodians.length,
-      },
-    });
-    this.mutations.addNetworkToAccount({ address, networkId });
+    if (account) {
+      const contract = new TonContract({
+        client: client,
+        tonPackage: contracts[account.walletType],
+        name: account.walletType,
+        keys: account.keypair,
+      });
+      const custodians = account.custodians;
+      await contract.deploy({
+        input: {
+          owners: custodians,
+          reqConfirms: custodians.length,
+        },
+      });
+      this.mutations.addNetworkToAccount({ address, networkId });
+    }
   }
 
   public async transferOrProposeTransfer({
@@ -337,43 +346,46 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     client: TonClient;
   }) {
     const account: AccountInterface | undefined = this.getters.getAccountByAddress(addressFrom);
-    const contract = new TonContract({
-      client,
-      tonPackage: contracts[account!.walletType],
-      name: account!.walletType,
-      keys: account!.keypair,
-      address: account!.address,
-    });
-    if (account!.custodians.length > 1) {
-      await contract.call({
-        functionName: "submitTransaction",
-        input: {
-          dest: addressTo,
-          value: amount,
-          bounce: true,
-          allBalance: false,
-          payload: message,
-        },
+
+    if (account) {
+      const contract = new TonContract({
+        client,
+        tonPackage: contracts[account.walletType],
+        name: account.walletType,
+        keys: account.keypair,
+        address: account.address,
       });
-      const response = await contract.run({
-        functionName: "getTransactions",
-      });
-      this.mutations.setPendingTransactions({
-        address: addressFrom,
-        symbol: "TON",
-        pendingTransactions: response.value.transactions,
-      });
-    } else {
-      await contract.call({
-        functionName: "sendTransaction",
-        input: {
-          dest: addressTo,
-          value: amount,
-          bounce: false,
-          flags: 1,
-          payload: message,
-        },
-      });
+      if (account.custodians.length > 1) {
+        await contract.call({
+          functionName: "submitTransaction",
+          input: {
+            dest: addressTo,
+            value: amount,
+            bounce: true,
+            allBalance: false,
+            payload: message,
+          },
+        });
+        const response = await contract.run({
+          functionName: "getTransactions",
+        });
+        this.mutations.setPendingTransactions({
+          address: addressFrom,
+          symbol: "TON",
+          pendingTransactions: response.value.transactions,
+        });
+      } else {
+        await contract.call({
+          functionName: "sendTransaction",
+          input: {
+            dest: addressTo,
+            value: amount,
+            bounce: false,
+            flags: 1,
+            payload: message,
+          },
+        });
+      }
     }
   }
 }

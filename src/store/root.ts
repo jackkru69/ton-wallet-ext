@@ -2,52 +2,21 @@ import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-mo
 
 import { accounts } from "./modules/accounts";
 import { networks } from "./modules/networks";
+import { wallet } from "./modules/wallet";
+import { keystore } from "./modules/keystore";
 
-export type Network = "http://0.0.0.0" | "http://net.ton.dev" | "http://main.ton.dev";
 class RootState {
-  isStoreRestored = false;
-  activeNetworkID = 0;
-  activeAccountAddress: string | undefined = undefined;
-  subscriptionBalanceHandle: number | null = null;
-  subscriptionTxsHandle: number | null = null;
+  isLocked = true;
 }
 
 class RootGetters extends Getters<RootState> {
-  public get isStoreRestored(): boolean {
-    return this.state.isStoreRestored;
-  }
-
-  public get activeNetworkID() {
-    return this.state.activeNetworkID;
-  }
-
-  public get activeAccountAddress() {
-    return this.state.activeAccountAddress;
-  }
-
-  public get subscriptionBalanceHandle(): number | null {
-    return this.state.subscriptionBalanceHandle;
-  }
-
-  public get subscriptionTxsHandle(): number | null {
-    return this.state.subscriptionTxsHandle;
+  public get getIsLocked(): boolean {
+    return this.state.isLocked;
   }
 }
 class RootMutations extends Mutations<RootState> {
-  setIsStoreRestored(payload: boolean) {
-    this.state.isStoreRestored = payload;
-  }
-
-  setNetwork(payload: number) {
-    this.state.activeNetworkID = payload;
-  }
-
-  setActiveAccountAddress(address: string | undefined) {
-    this.state.activeAccountAddress = address;
-  }
-
-  setSubscriptionBalanceHandle(payload: number | null) {
-    this.state.subscriptionBalanceHandle = payload;
+  public setIsLocked(v: boolean) {
+    this.state.isLocked = v;
   }
 }
 
@@ -61,6 +30,8 @@ export const root = new Module({
   modules: {
     accounts,
     networks,
+    wallet,
+    keystore,
   },
 });
 

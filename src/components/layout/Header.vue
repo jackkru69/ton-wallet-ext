@@ -70,17 +70,20 @@
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { networksModuleMapper } from "@/store/modules/networks";
 
-import { rootModuleMapper } from "@/store/root";
+import { walletModuleMapper } from "@/store/modules/wallet";
 import { isEmpty } from "lodash";
 import { Component, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   methods: {
-    ...rootModuleMapper.mapMutations(["setNetwork", "setActiveAccountAddress"]),
+    ...walletModuleMapper.mapMutations([
+      "setNetwork",
+      "setActiveAccountAddress",
+    ]),
     isEmpty,
   },
   computed: {
-    ...rootModuleMapper.mapGetters([
+    ...walletModuleMapper.mapGetters([
       "activeNetworkID",
       "activeAccountAddress",
       "isStoreRestored",

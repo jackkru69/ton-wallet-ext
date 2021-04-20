@@ -16,12 +16,15 @@
 <script lang="ts">
 import { tonService } from "@/background";
 import { accountsModuleMapper } from "@/store/modules/accounts";
-import { rootModuleMapper } from "@/store/root";
+import { walletModuleMapper } from "@/store/modules/wallet";
 import { Component, VModel, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountAddress", "activeNetworkID"]),
+    ...walletModuleMapper.mapGetters([
+      "activeAccountAddress",
+      "activeNetworkID",
+    ]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["deploy"]),

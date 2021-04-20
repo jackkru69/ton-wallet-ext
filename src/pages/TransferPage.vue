@@ -48,12 +48,12 @@
 import { Component, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import { accountsModuleMapper } from "@/store/modules/accounts";
-import { rootModuleMapper } from "@/store/root";
+import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters(["activeAccountAddress"]),
+    ...walletModuleMapper.mapGetters(["activeAccountAddress"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["transferOrProposeTransfer"]),

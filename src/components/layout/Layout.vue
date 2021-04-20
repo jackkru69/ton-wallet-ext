@@ -14,7 +14,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import Aside from "@/components/layout/Aside.vue";
 import Header from "@/components/layout/Header.vue";
 import { tonService } from "@/background";
-import { rootModuleMapper } from "@/store/root";
+import { walletModuleMapper } from "@/store/modules/wallet";
 import { accountsModuleMapper, contracts } from "@/store/modules/accounts";
 import { store } from "@/store";
 import {
@@ -30,7 +30,7 @@ const Mappers = Vue.extend({
       "updateBalanceByAddress",
       "setBalanceByAddressAndTokenSymbol",
     ]),
-    ...rootModuleMapper.mapMutations(["setSubscriptionBalanceHandle"]),
+    ...walletModuleMapper.mapMutations(["setSubscriptionBalanceHandle"]),
     ...accountsModuleMapper.mapMutations([
       "setTransactions",
       "deleteAccount",
@@ -38,7 +38,7 @@ const Mappers = Vue.extend({
     ]),
   },
   computed: {
-    ...rootModuleMapper.mapGetters([
+    ...walletModuleMapper.mapGetters([
       "activeAccountAddress",
       "activeNetworkID",
       "isStoreRestored",
@@ -84,7 +84,6 @@ export default class Layout extends Mappers {
             client: tonService.client,
             tonPackage: contracts[account.walletType],
             name: account.walletType,
-            keys: account.keypair,
             address: account.address,
           });
           const responseTx = await contract.run({

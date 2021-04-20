@@ -3,7 +3,7 @@
     <DeployModal v-model="isDeployModalOpen" />
     <CustodiansModal
       v-model="isCustodiansModalOpen"
-      :custodians="account.custodians || []"
+      :custodians="account ? account.custodians : []"
     />
     <Inner>
       <div class="v-main-page__menu-bar">
@@ -56,6 +56,7 @@
         <h1>
           {{
             account &&
+            account.tokens.length &&
             baseToAssetAmount(account.tokens[0].balance, "TON") +
               " " +
               account.tokens[0].symbol
@@ -86,13 +87,6 @@
         </VTab>
       </VTabs>
       <VTabsItems v-model="tab">
-        <VTabItem key="ptxs">
-          <VDataTable
-            :headers="headersPendingTxs"
-            :items="pendingTxs"
-            :items-per-page="5"
-          ></VDataTable>
-        </VTabItem>
         <VTabItem key="txs">
           <VDataTable
             :headers="headersTxs"
@@ -124,14 +118,14 @@ import {
   accountsModuleMapper,
 } from "@/store/modules/accounts";
 
-import { rootModuleMapper } from "@/store/root";
+import { walletModuleMapper } from "@/store/modules/wallet";
 import { baseToAssetAmount, sliceString } from "@/utils";
 import { sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters([
+    ...walletModuleMapper.mapGetters([
       "activeAccountAddress",
       "activeNetworkID",
       "isStoreRestored",
@@ -151,7 +145,7 @@ const Mappers = Vue.extend({
       "deleteAccount",
       "setPendingTransactions",
     ]),
-    ...rootModuleMapper.mapMutations(["setActiveAccountAddress"]),
+    ...walletModuleMapper.mapMutations(["setActiveAccountAddress"]),
   },
 });
 
@@ -164,13 +158,9 @@ export default class MainPage extends Mappers {
   isDeployModalOpen = false;
   isCustodiansModalOpen = false;
 
-  tab = "ptxs";
+  tab = "txs";
 
   items = [
-    {
-      title: "Pending transactions",
-      tab: "ptxs",
-    },
     {
       title: "Transactions",
       tab: "txs",
@@ -194,21 +184,6 @@ export default class MainPage extends Mappers {
     {
       text: "value",
       value: "fValue",
-    },
-  ];
-
-  headersPendingTxs = [
-    {
-      text: "id",
-      value: "fId",
-    },
-    {
-      text: "creator",
-      value: "creator",
-    },
-    {
-      text: "dest",
-      value: "dest",
     },
   ];
 
