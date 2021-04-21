@@ -1,15 +1,22 @@
 <template>
   <VDialog v-model="isOpen" persistent max-width="325px">
     <VCard>
-      <VCardTitle>
-        <h3>Deploy?</h3>
-      </VCardTitle>
-      <v-card-text> </v-card-text>
-      <v-card-actions>
-        <VSpacer></VSpacer>
-        <VBtn text @click="rejectPromise"> Nope </VBtn>
-        <VBtn :loading="isPending" text @click="resolvePromise"> Yeeees </VBtn>
-      </v-card-actions>
+      <VForm
+        ref="form"
+        v-model="valid"
+        lazy-validation
+        @submit.prevent="resolvePromise"
+      >
+        <VCardTitle>
+          <h3>Deploy?</h3>
+        </VCardTitle>
+        <v-card-text> </v-card-text>
+        <v-card-actions>
+          <VSpacer></VSpacer>
+          <VBtn text @click="rejectPromise"> Nope </VBtn>
+          <VBtn :loading="isPending" text type="submit"> Yeeees </VBtn>
+        </v-card-actions>
+      </VForm>
     </VCard>
   </VDialog>
 </template>
@@ -17,7 +24,7 @@
 import { tonService } from "@/background";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
-import { Component, VModel, Vue } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   computed: {
@@ -33,6 +40,7 @@ const Mappers = Vue.extend({
 
 @Component
 export default class DeployModal extends Mappers {
+  valid = true;
   isOpen = false;
 
   isPending = false;

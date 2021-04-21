@@ -125,6 +125,7 @@ import { baseToAssetAmount, sliceString } from "@/utils";
 import { sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
 import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
+import { keystoreModuleMapper } from "@/store/modules/keystore";
 
 const Mappers = Vue.extend({
   computed: {
@@ -149,6 +150,7 @@ const Mappers = Vue.extend({
       "setPendingTransactions",
     ]),
     ...walletModuleMapper.mapMutations(["setActiveAccountAddress"]),
+    ...keystoreModuleMapper.mapActions(["removeKey"]),
   },
 });
 
@@ -176,18 +178,22 @@ export default class MainPage extends Mappers {
     {
       text: "id",
       value: "fId",
+      sortable: false,
     },
     {
       text: "src",
       value: "fSrc",
+      sortable: false,
     },
     {
       text: "dst",
       value: "fDst",
+      sortable: false,
     },
     {
       text: "value",
       value: "fValue",
+      sortable: false,
     },
   ];
 
@@ -246,12 +252,18 @@ export default class MainPage extends Mappers {
 
   onClickDeleteAccount() {
     if (this.accountsCount <= 1) {
-      this.deleteAccount(this.activeAccountAddress);
-      this.$router.push("/initialize");
+      if (this.activeAccountAddress) {
+        this.deleteAccount(this.activeAccountAddress);
+        this.removeKey(this.activeAccountAddress);
+        this.$router.push("/initialize");
+      }
     } else {
-      this.deleteAccount(this.activeAccountAddress);
-      const address = this.accounts[0].address;
-      if (address) this.setActiveAccountAddress(address);
+      if (this.activeAccountAddress) {
+        this.deleteAccount(this.activeAccountAddress);
+        this.removeKey(this.activeAccountAddress);
+        const address = this.accounts[0].address;
+        if (address) this.setActiveAccountAddress(address);
+      }
     }
   }
 }
@@ -259,7 +271,6 @@ export default class MainPage extends Mappers {
 
 <style lang="sass">
 .v-main-page
-
   &__menu-bar
     display: grid
     grid-template-columns: 30% minmax(30%, 1fr) 30%

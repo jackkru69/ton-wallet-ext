@@ -34,7 +34,11 @@
           <v-subheader>Accounts</v-subheader>
           <v-divider></v-divider>
           <VList class="v-app-bar__list" max-height="228px">
-            <VListItemGroup v-model="modelActiveAccountAddress" color="primary">
+            <VListItemGroup
+              @change="onChange"
+              v-model="modelActiveAccountAddress"
+              color="primary"
+            >
               <VListItem
                 v-for="item in accounts"
                 :key="item.address"

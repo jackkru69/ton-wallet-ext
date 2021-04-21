@@ -22,11 +22,11 @@
             :error-messages="passwordErrors"
           ></VTextField
         ></VCardText>
-        <v-card-actions>
+        <VCardActions>
           <VSpacer></VSpacer>
           <VBtn text @click="rejectPromise()"> Cancel </VBtn>
           <VBtn text type="submit"> Submit </VBtn>
-        </v-card-actions>
+        </VCardActions>
       </VForm>
     </VCard>
   </VDialog>
@@ -75,7 +75,6 @@ export default class TypePasswordModal extends Mappers {
               public: this.getPublicKeyData(address),
               secret: this.getPrivateKeyData(address, this.password),
             };
-            console.log(keypair);
             resolve({ password: this.password, keypair });
           } else {
             this.getPrivateKeyData(this.getKeyIDs[0], this.password);
