@@ -307,10 +307,12 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     address,
     client,
     networkId,
+    keypair,
   }: {
     address: string | undefined;
     symbol: string;
     networkId: number;
+    keypair: KeyPair;
     client: TonClient;
   }) {
     const account: AccountInterface | undefined = this.getters.getAccountByAddress(address);
@@ -319,7 +321,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         client: client,
         tonPackage: contracts[account.walletType],
         name: account.walletType,
-        keys: account.keypair,
+        keys: keypair,
       });
       const custodians = account.custodians;
       await contract.deploy({
@@ -338,12 +340,14 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     amount,
     message,
     client,
+    keypair,
   }: {
     addressFrom: string;
     addressTo: string;
     amount: string;
     message: string;
     client: TonClient;
+    keypair: KeyPair;
   }) {
     const account: AccountInterface | undefined = this.getters.getAccountByAddress(addressFrom);
 
@@ -352,7 +356,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         client,
         tonPackage: contracts[account.walletType],
         name: account.walletType,
-        keys: account.keypair,
+        keys: keypair,
         address: account.address,
       });
       if (account.custodians.length > 1) {

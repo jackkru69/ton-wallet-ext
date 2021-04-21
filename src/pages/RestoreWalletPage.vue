@@ -1,5 +1,7 @@
 <template>
   <div class="v-restore-wallet-page py-8">
+    <TypePasswordModal ref="typePasswordModalRestoreWallet" />
+
     <Inner>
       <VForm
         ref="form"
@@ -77,6 +79,7 @@
           </VTextField>
         </div>
         <VTextField
+          v-if="accountsCount === 0"
           class="mb-4"
           v-model.trim="password"
           clearable
@@ -126,6 +129,8 @@ import { convertSeedToKeyPair, validateSeedPhrase } from "@/ton/ton.utils";
 import TonContract from "@/ton/ton.contract";
 import { KeyPair } from "@tonclient/core";
 import { isEmpty } from "lodash";
+import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
+
 const Mappers = Vue.extend({
   computed: {
     ...walletModuleMapper.mapGetters([
@@ -142,7 +147,7 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner },
+  components: { Inner, TypePasswordModal },
   methods: { isEmpty },
 })
 export default class RestoreWalletPage extends Mappers {
@@ -245,18 +250,38 @@ export default class RestoreWalletPage extends Mappers {
       getKeypair,
       custodians,
       isDeployed,
+      password,
     } = this;
-    const keypair = await getKeypair();
-    await this.addAccount({
-      keypair,
-      custodians,
-      walletType,
-      network: activeNetworkID,
-      name,
-      client: tonService.client,
-      isDeployed,
-    });
-    this.$router.push("/");
+    if (this.accountsCount === 0) {
+      const keypair = await getKeypair();
+      await this.addAccount({
+        keypair,
+        custodians,
+        walletType,
+        network: activeNetworkID,
+        name,
+        client: tonService.client,
+        isDeployed,
+        password,
+      });
+      this.$router.push("/");
+    } else {
+      const modal: any = this.$refs.typePasswordModalRestoreWallet;
+      modal.show().then(async (result: any) => {
+        const keypair = await getKeypair();
+        await this.addAccount({
+          keypair,
+          custodians,
+          walletType,
+          network: activeNetworkID,
+          name,
+          client: tonService.client,
+          isDeployed,
+          password: result.password,
+        });
+        this.$router.push("/");
+      });
+    }
   }
 }
 </script>

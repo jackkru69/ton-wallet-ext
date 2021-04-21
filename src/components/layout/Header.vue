@@ -1,5 +1,6 @@
 <template>
   <v-app-bar class="v-app-bar" app :height="72" flat>
+    <TypePasswordModal ref="typePasswordModalHeader" />
     <RouterLink to="/">
       <img class="v-app-bar__logo mr-4" src="@/assets/img/freeton.png" alt="" />
     </RouterLink>
@@ -21,6 +22,7 @@
       max-height="526px"
       rounded
       offset-y
+      v-if="accountsCount !== 0"
     >
       <template v-slot:activator="{ on }">
         <VBtn class="ml-4" icon x-large v-on="on">
@@ -49,6 +51,11 @@
         </template>
 
         <VList nav>
+          <VListItem @click="onClickEasyAdd">
+            <VListItemContent>
+              <VListItemTitle>Easy add account</VListItemTitle>
+            </VListItemContent>
+          </VListItem>
           <VListItem link to="/initialize/create">
             <VListItemContent>
               <VListItemTitle>Add account</VListItemTitle>
@@ -67,12 +74,15 @@
 
 
   <script lang="ts">
+import { tonService } from "@/background";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { networksModuleMapper } from "@/store/modules/networks";
 
 import { walletModuleMapper } from "@/store/modules/wallet";
+import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
 import { isEmpty } from "lodash";
 import { Component, Vue } from "vue-property-decorator";
+import TypePasswordModal from "../modals/TypePasswordModal.vue";
 
 const Mappers = Vue.extend({
   methods: {
@@ -80,6 +90,7 @@ const Mappers = Vue.extend({
       "setNetwork",
       "setActiveAccountAddress",
     ]),
+    ...accountsModuleMapper.mapActions(["addAccount"]),
     isEmpty,
   },
   computed: {
@@ -88,7 +99,7 @@ const Mappers = Vue.extend({
       "activeAccountAddress",
       "isStoreRestored",
     ]),
-    ...accountsModuleMapper.mapGetters(["accounts"]),
+    ...accountsModuleMapper.mapGetters(["accounts", "accountsCount"]),
     ...networksModuleMapper.mapGetters(["networksForSelect"]),
     modelNetwork: {
       get() {
@@ -109,12 +120,35 @@ const Mappers = Vue.extend({
   },
 });
 
-@Component
+@Component({ components: { TypePasswordModal } })
 export default class Header extends Mappers {
   onChange() {
     if (this.$route.path !== "/") {
       this.$router.push("/");
     }
+  }
+
+  onClickEasyAdd() {
+    const modal: any = this.$refs.typePasswordModalHeader;
+    modal.show().then(async (result: any) => {
+      const seedPhrase: any = await generateSeed(tonService.client, 12);
+      const keypair = await convertSeedToKeyPair(
+        tonService.client,
+        seedPhrase?.phrase,
+        12
+      );
+      const { activeNetworkID, accountsCount } = this;
+      await this.addAccount({
+        keypair,
+        custodians: [`0x${keypair.public}`],
+        walletType: "safe-multisig",
+        network: activeNetworkID,
+        name: `Account ${accountsCount + 1}`,
+        client: tonService.client,
+        password: result.password,
+      });
+      this.$router.push("/");
+    });
   }
 }
 </script>

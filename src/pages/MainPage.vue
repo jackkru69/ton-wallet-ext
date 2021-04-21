@@ -1,10 +1,12 @@
 <template>
   <div class="v-main-page">
-    <DeployModal v-model="isDeployModalOpen" />
+    <DeployModal ref="deployModal" />
     <CustodiansModal
       v-model="isCustodiansModalOpen"
       :custodians="account ? account.custodians : []"
     />
+    <TypePasswordModal ref="typePasswordModalMain" />
+
     <Inner>
       <div class="v-main-page__menu-bar">
         <VTooltip bottom>
@@ -122,6 +124,7 @@ import { walletModuleMapper } from "@/store/modules/wallet";
 import { baseToAssetAmount, sliceString } from "@/utils";
 import { sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
+import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
 
 const Mappers = Vue.extend({
   computed: {
@@ -139,7 +142,7 @@ const Mappers = Vue.extend({
     ]),
   },
   methods: {
-    ...accountsModuleMapper.mapActions(["updateBalanceByAddress"]),
+    ...accountsModuleMapper.mapActions(["updateBalanceByAddress", "deploy"]),
     ...accountsModuleMapper.mapMutations([
       "setTransactions",
       "deleteAccount",
@@ -150,13 +153,14 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner, VCard, DeployModal, CustodiansModal },
+  components: { Inner, VCard, DeployModal, CustodiansModal, TypePasswordModal },
   methods: { sliceString, baseToAssetAmount },
 })
 export default class MainPage extends Mappers {
   isAirdropPending = false;
   isDeployModalOpen = false;
   isCustodiansModalOpen = false;
+  isPending = false;
 
   tab = "txs";
 
@@ -229,7 +233,13 @@ export default class MainPage extends Mappers {
       if (this.account.networks.includes(this.activeNetworkID)) {
         this.$router.push("/transfer");
       } else {
-        this.isDeployModalOpen = true;
+        const typePasswordModal: any = this.$refs.typePasswordModalMain;
+        typePasswordModal
+          .show(this.activeAccountAddress)
+          .then(async (result: any) => {
+            const deployModal: any = this.$refs.deployModal;
+            await deployModal.onClickDeploy(result);
+          });
       }
     }
   }

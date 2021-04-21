@@ -1,5 +1,7 @@
 <template>
   <div class="v-create-wallet-page py-8">
+    <TypePasswordModal ref="typePasswordModalAddWallet" />
+
     <Inner>
       <VForm
         ref="form"
@@ -50,6 +52,7 @@
           </template></VTextField
         >
         <VTextField
+          v-if="accountsCount === 0"
           class="mb-4"
           v-model.trim="password"
           clearable
@@ -131,7 +134,6 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import { KeyPair } from "@tonclient/core";
 import Inner from "@/components/layout/Inner.vue";
-import { VCard, VIcon, VTextField, VSelect, VForm, VBtn } from "vuetify/lib";
 import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
 import {
   accountsModuleMapper,
@@ -143,6 +145,7 @@ import { tonService } from "@/background";
 import { isEmpty } from "lodash";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
 import { rootModuleMapper } from "@/store/root";
+import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
 
 const Mappers = Vue.extend({
   computed: {
@@ -161,7 +164,7 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner, VCard, VIcon, VTextField, VSelect, VForm, VBtn },
+  components: { Inner, TypePasswordModal },
 })
 export default class CreateWalletPage extends Mappers {
   valid = true;
@@ -228,11 +231,7 @@ export default class CreateWalletPage extends Mappers {
       keypair,
       password,
     } = this;
-    try {
-      if (this.accountsCount > 0) {
-        this.getPrivateKeyData(this.getKeyIDs[0], this.password);
-      }
-
+    if (this.accountsCount === 0) {
       await this.addAccount({
         keypair,
         custodians,
@@ -243,8 +242,20 @@ export default class CreateWalletPage extends Mappers {
         password,
       });
       this.$router.push("/");
-    } catch (error) {
-      this.passwordErrors = ["Invalid password"];
+    } else {
+      const modal: any = this.$refs.typePasswordModalAddWallet;
+      modal.show().then(async (result: any) => {
+        await this.addAccount({
+          keypair,
+          custodians,
+          walletType,
+          network: activeNetworkID,
+          name,
+          client: tonService.client,
+          password: result.password,
+        });
+        this.$router.push("/");
+      });
     }
   }
 

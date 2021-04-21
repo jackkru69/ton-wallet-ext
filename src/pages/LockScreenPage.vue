@@ -37,7 +37,6 @@ import { keystoreModuleMapper } from "@/store/modules/keystore";
 
 const Mappers = Vue.extend({
   computed: {
-    ...rootModuleMapper.mapGetters([]),
     ...keystoreModuleMapper.mapGetters(["getKeyIDs", "getPrivateKeyData"]),
   },
   methods: {
