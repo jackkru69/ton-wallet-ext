@@ -115,7 +115,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Inject, Vue, Watch } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import {
   accountsModuleMapper,
@@ -168,6 +168,8 @@ export default class RestoreWalletPage extends Mappers {
       walletsTypes,
     };
   }
+
+  @Inject() showTypePasswordModal!: any;
 
   public get onChangeSeedPhraseAndWalletTypeAndNetwork() {
     const { seedPhrase, walletType, activeNetworkID } = this;
@@ -251,6 +253,7 @@ export default class RestoreWalletPage extends Mappers {
       custodians,
       isDeployed,
       password,
+      seedPhrase,
     } = this;
     if (this.accountsCount === 0) {
       const keypair = await getKeypair();
@@ -263,11 +266,11 @@ export default class RestoreWalletPage extends Mappers {
         client: tonService.client,
         isDeployed,
         password,
+        seedPhrase,
       });
       this.$router.push("/");
     } else {
-      const modal: any = this.$refs.typePasswordModalRestoreWallet;
-      modal.show().then(async (result: any) => {
+      this.showTypePasswordModal.then(async (result: any) => {
         const keypair = await getKeypair();
         await this.addAccount({
           keypair,
@@ -278,6 +281,7 @@ export default class RestoreWalletPage extends Mappers {
           client: tonService.client,
           isDeployed,
           password: result.password,
+          seedPhrase,
         });
         this.$router.push("/");
       });

@@ -1,7 +1,5 @@
 <template>
   <div class="v-create-wallet-page py-8">
-    <TypePasswordModal ref="typePasswordModalAddWallet" />
-
     <Inner>
       <VForm
         ref="form"
@@ -131,7 +129,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Inject, Vue, Watch } from "vue-property-decorator";
 import { KeyPair } from "@tonclient/core";
 import Inner from "@/components/layout/Inner.vue";
 import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
@@ -143,7 +141,6 @@ import {
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
 import { isEmpty } from "lodash";
-import { keystoreModuleMapper } from "@/store/modules/keystore";
 import { rootModuleMapper } from "@/store/root";
 import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
 
@@ -154,7 +151,6 @@ const Mappers = Vue.extend({
       "getAccountByAddress",
       "accountsCount",
     ]),
-    ...keystoreModuleMapper.mapGetters(["getKeyIDs", "getPrivateKeyData"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
@@ -186,6 +182,8 @@ export default class CreateWalletPage extends Mappers {
       walletsTypes,
     };
   }
+
+  @Inject() showTypePasswordModal!: any;
 
   @Watch("password")
   onChangePassword() {
@@ -229,6 +227,7 @@ export default class CreateWalletPage extends Mappers {
       name,
       custodians,
       keypair,
+      seedPhrase,
       password,
     } = this;
     if (this.accountsCount === 0) {
@@ -240,11 +239,11 @@ export default class CreateWalletPage extends Mappers {
         name,
         client: tonService.client,
         password,
+        seedPhrase,
       });
       this.$router.push("/");
     } else {
-      const modal: any = this.$refs.typePasswordModalAddWallet;
-      modal.show().then(async (result: any) => {
+      this.showTypePasswordModal().then(async (result: any) => {
         await this.addAccount({
           keypair,
           custodians,
@@ -253,6 +252,7 @@ export default class CreateWalletPage extends Mappers {
           name,
           client: tonService.client,
           password: result.password,
+          seedPhrase,
         });
         this.$router.push("/");
       });

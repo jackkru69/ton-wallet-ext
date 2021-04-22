@@ -92,6 +92,7 @@ export default class CreateWalletPage extends Mappers {
       name: `Account ${accountsCount + 1}`,
       client: tonService.client,
       password: password,
+      seedPhrase,
     });
     this.$router.push("/");
   }

@@ -1,6 +1,5 @@
 <template>
   <v-app-bar class="v-app-bar" app :height="72" flat>
-    <TypePasswordModal ref="typePasswordModalHeader" />
     <RouterLink to="/">
       <img class="v-app-bar__logo mr-4" src="@/assets/img/freeton.png" alt="" />
     </RouterLink>
@@ -85,8 +84,7 @@ import { networksModuleMapper } from "@/store/modules/networks";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
 import { isEmpty } from "lodash";
-import { Component, Vue } from "vue-property-decorator";
-import TypePasswordModal from "../modals/TypePasswordModal.vue";
+import { Component, Inject, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   methods: {
@@ -124,7 +122,7 @@ const Mappers = Vue.extend({
   },
 });
 
-@Component({ components: { TypePasswordModal } })
+@Component
 export default class Header extends Mappers {
   onChange() {
     if (this.$route.path !== "/") {
@@ -132,9 +130,10 @@ export default class Header extends Mappers {
     }
   }
 
+  @Inject() showTypePasswordModal!: any;
+
   onClickEasyAdd() {
-    const modal: any = this.$refs.typePasswordModalHeader;
-    modal.show().then(async (result: any) => {
+    this.showTypePasswordModal().then(async (result: any) => {
       const seedPhrase: any = await generateSeed(tonService.client, 12);
       const keypair = await convertSeedToKeyPair(
         tonService.client,
@@ -150,8 +149,9 @@ export default class Header extends Mappers {
         name: `Account ${accountsCount + 1}`,
         client: tonService.client,
         password: result.password,
+        seedPhrase,
       });
-      this.$router.push("/");
+      if (this.$route.path !== "/") this.$router.push("/");
     });
   }
 }

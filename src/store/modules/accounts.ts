@@ -156,6 +156,13 @@ class AccountsGetters extends Getters<AccountsState> {
   public get accountsCount(): number {
     return this.state.accounts.length;
   }
+
+  public get accountNameByAddress(): (address: any) => string {
+    return (address: any) => {
+      const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+      return this.state.accounts[accountIndex].name;
+    };
+  }
 }
 
 class AccountsMutations extends Mutations<AccountsState> {
@@ -213,6 +220,11 @@ class AccountsMutations extends Mutations<AccountsState> {
     const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
     this.state.accounts[accountIndex].isExist = exist;
   }
+
+  changeAccountName({ address, newName }: { address: any; newName: string }) {
+    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
+    this.state.accounts[accountIndex].name = newName;
+  }
 }
 
 class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMutations, AccountsActions> {
@@ -229,6 +241,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     network,
     client,
     isDeployed,
+    seedPhrase,
     password,
   }: {
     custodians: string[];
@@ -237,6 +250,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     name: string;
     network: number | null;
     client: TonClient;
+    seedPhrase: string;
     isDeployed?: boolean;
     password: string;
   }) {
@@ -251,7 +265,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       keyID: address,
       password,
       publicData: keypair.public,
-      privateData: keypair.secret,
+      privateData: { secret: keypair.secret, seedPhrase },
     });
     this.store.commit("setIsLocked", false);
     const account: AccountInterface = {

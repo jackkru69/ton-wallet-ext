@@ -1,5 +1,5 @@
 <template>
-  <VDialog eager v-model="isOpen" persistent max-width="325px">
+  <VDialog v-model="model" max-width="325px">
     <VCard>
       <VForm
         ref="form"
@@ -8,90 +8,59 @@
         @submit.prevent="resolvePromise"
       >
         <VCardTitle>
-          <h3>Type your password</h3>
+          <h3>Account details</h3>
         </VCardTitle>
         <VCardText>
           <VTextField
-            v-model.trim="password"
+            v-model.trim="modelAccountName"
             clearable
-            :rules="[(v) => !!v || 'Password is required']"
+            :rules="[(v) => !!v || 'Name is required']"
             outlined
-            label="Password"
-            type="password"
-            autofocus
-            :error-messages="passwordErrors"
+            label="Name"
           ></VTextField
         ></VCardText>
-        <VCardActions>
-          <VSpacer></VSpacer>
-          <VBtn text @click="rejectPromise()"> Cancel </VBtn>
-          <VBtn text type="submit"> Submit </VBtn>
-        </VCardActions>
       </VForm>
     </VCard>
   </VDialog>
 </template>
 <script lang="ts">
+import { accountsModuleMapper } from "@/store/modules/accounts";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
-import { sliceString } from "@/utils";
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { walletModuleMapper } from "@/store/modules/wallet";
+import { Component, VModel, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
   computed: {
-    ...keystoreModuleMapper.mapGetters([
-      "getKeyIDs",
-      "getPrivateKeyData",
-      "getPublicKeyData",
-    ]),
+    ...keystoreModuleMapper.mapGetters(["getPrivateData", "getPublicKeyData"]),
+    ...accountsModuleMapper.mapGetters(["accountNameByAddress"]),
+    ...walletModuleMapper.mapGetters(["activeAccountAddress"]),
+    modelAccountName: {
+      get() {
+        return this.accountNameByAddress(this.activeAccountAddress);
+      },
+      set(value: string) {
+        this.changeAccountName({
+          address: this.activeAccountAddress,
+          newName: value,
+        });
+      },
+    },
+  },
+  methods: {
+    ...accountsModuleMapper.mapMutations(["changeAccountName"]),
   },
 });
 
-@Component({ methods: { sliceString } })
-export default class TypePasswordModal extends Mappers {
+@Component
+export default class AccountDetailsModal extends Mappers {
+  @VModel() model: boolean;
   valid = true;
-  isOpen = false;
 
-  password = "";
-  passwordErrors: string[] = [];
-
-  resolvePromise: any = null;
-  rejectPromise: any = null;
-
-  @Watch("password")
-  onChangePassword() {
-    if (this.passwordErrors.length) {
-      this.passwordErrors = [];
+  public get publicKey(): string {
+    if (this.activeAccountAddress) {
+      return this.getPublicKeyData(this.activeAccountAddress);
     }
-  }
-
-  show(address?: string) {
-    return new Promise((resolve, reject) => {
-      this.isOpen = true;
-
-      this.resolvePromise = () => {
-        try {
-          if (address) {
-            const keypair = {
-              public: this.getPublicKeyData(address),
-              secret: this.getPrivateKeyData(address, this.password),
-            };
-            resolve({ password: this.password, keypair });
-          } else {
-            this.getPrivateKeyData(this.getKeyIDs[0], this.password);
-            resolve({ password: this.password });
-          }
-
-          this.isOpen = false;
-        } catch (error) {
-          this.passwordErrors = ["Invalid password"];
-        }
-      };
-
-      this.rejectPromise = () => {
-        reject(false);
-        this.isOpen = false;
-      };
-    });
+    return "";
   }
 }
 </script>

@@ -5,8 +5,6 @@
       v-model="isCustodiansModalOpen"
       :custodians="account ? account.custodians : []"
     />
-    <TypePasswordModal ref="typePasswordModalMain" />
-
     <Inner>
       <div class="v-main-page__menu-bar">
         <VTooltip bottom>
@@ -41,7 +39,7 @@
             </VBtn>
           </template>
           <VList nav>
-            <VListItem>
+            <VListItem @click="isAccountDetailsModalOpen = true">
               <VListItemTitle>account details</VListItemTitle>
             </VListItem>
             <VListItem link>
@@ -109,12 +107,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Inject, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import DeployModal from "@/components/modals/DeployModal.vue";
 import CustodiansModal from "@/components/modals/CustodiansModal.vue";
 
-import { VCard } from "vuetify/lib";
 import {
   AccountInterface,
   accountsModuleMapper,
@@ -124,8 +121,8 @@ import { walletModuleMapper } from "@/store/modules/wallet";
 import { baseToAssetAmount, sliceString } from "@/utils";
 import { sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
-import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
+import AccountDetailsModal from "@/components/modals/AccountDetailsModal.vue";
 
 const Mappers = Vue.extend({
   computed: {
@@ -155,14 +152,20 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner, VCard, DeployModal, CustodiansModal, TypePasswordModal },
+  components: {
+    Inner,
+    DeployModal,
+    CustodiansModal,
+    AccountDetailsModal,
+  },
   methods: { sliceString, baseToAssetAmount },
 })
 export default class MainPage extends Mappers {
   isAirdropPending = false;
-  isDeployModalOpen = false;
   isCustodiansModalOpen = false;
-  isPending = false;
+  isAccountDetailsModalOpen = false;
+
+  @Inject() showTypePasswordModal!: any;
 
   tab = "txs";
 
@@ -239,13 +242,12 @@ export default class MainPage extends Mappers {
       if (this.account.networks.includes(this.activeNetworkID)) {
         this.$router.push("/transfer");
       } else {
-        const typePasswordModal: any = this.$refs.typePasswordModalMain;
-        typePasswordModal
-          .show(this.activeAccountAddress)
-          .then(async (result: any) => {
+        this.showTypePasswordModal(this.activeAccountAddress).then(
+          async (result: any) => {
             const deployModal: any = this.$refs.deployModal;
             await deployModal.onClickDeploy(result);
-          });
+          }
+        );
       }
     }
   }

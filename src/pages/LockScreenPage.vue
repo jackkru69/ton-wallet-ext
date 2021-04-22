@@ -37,7 +37,7 @@ import { keystoreModuleMapper } from "@/store/modules/keystore";
 
 const Mappers = Vue.extend({
   computed: {
-    ...keystoreModuleMapper.mapGetters(["getKeyIDs", "getPrivateKeyData"]),
+    ...keystoreModuleMapper.mapGetters(["getKeyIDs", "getPrivateData"]),
   },
   methods: {
     ...rootModuleMapper.mapMutations(["setIsLocked"]),
@@ -62,7 +62,7 @@ export default class LockScreenPage extends Mappers {
 
   onSubmit() {
     try {
-      this.getPrivateKeyData(this.getKeyIDs[0], this.password);
+      this.getPrivateData(this.getKeyIDs[0], this.password);
       this.setIsLocked(false);
       this.$router.push("/");
     } catch (error) {

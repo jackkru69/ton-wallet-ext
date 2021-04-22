@@ -1,7 +1,5 @@
 <template>
   <div class="transfer-page py-8">
-    <TypePasswordModal ref="typePasswordModalTransfer" />
-
     <Inner>
       <VForm
         ref="form"
@@ -47,12 +45,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Inject, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
-import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
 
 const Mappers = Vue.extend({
   computed: {
@@ -64,7 +61,7 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner, TypePasswordModal },
+  components: { Inner },
 })
 export default class TransferPage extends Mappers {
   valid = true;
@@ -73,9 +70,10 @@ export default class TransferPage extends Mappers {
   amount = "";
   message = "";
 
+  @Inject() showTypePasswordModal!: any;
+
   async onSubmit() {
-    const modal: any = this.$refs.typePasswordModalTransfer;
-    modal.show().then(async (result: any) => {
+    this.showTypePasswordModal().then(async (result: any) => {
       if (this.activeAccountAddress) {
         await this.transferOrProposeTransfer({
           addressFrom: this.activeAccountAddress,

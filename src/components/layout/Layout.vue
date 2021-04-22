@@ -1,5 +1,13 @@
 <template>
   <v-app>
+    <TypePasswordModal
+      v-model="password"
+      :isOpen="isTypePasswordModalOpen"
+      :resolvePromise="resolvePromise"
+      :rejectPromise="rejectPromise"
+      :passwordErrors="passwordErrors"
+    />
+
     <Header />
     <v-main>
       <v-container fluid class="pa-0">
@@ -10,11 +18,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Provide, Vue, Watch } from "vue-property-decorator";
 import Aside from "@/components/layout/Aside.vue";
 import Header from "@/components/layout/Header.vue";
 import { tonService } from "@/background";
 import { walletModuleMapper } from "@/store/modules/wallet";
+import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
 import { accountsModuleMapper, contracts } from "@/store/modules/accounts";
 import { store } from "@/store";
 import {
@@ -23,6 +32,7 @@ import {
   subscribeAccount,
 } from "@/ton/ton.utils";
 import TonContract from "@/ton/ton.contract";
+import { keystoreModuleMapper } from "@/store/modules/keystore";
 
 const Mappers = Vue.extend({
   methods: {
@@ -45,13 +55,28 @@ const Mappers = Vue.extend({
       "subscriptionBalanceHandle",
     ]),
     ...accountsModuleMapper.mapGetters(["getAccountByAddress"]),
+    ...keystoreModuleMapper.mapGetters([
+      "getKeyIDs",
+      "getPrivateData",
+      "getPublicKeyData",
+    ]),
   },
 });
 
 @Component({
-  components: { Aside, Header },
+  components: { Aside, Header, TypePasswordModal },
 })
 export default class Layout extends Mappers {
+  isTypePasswordModalOpen = false;
+
+  resolvePromise: any = null;
+  rejectPromise: any = null;
+
+  password = "";
+  passwordErrors: string[] = [];
+
+  @Provide() showTypePasswordModal = this._showTypePasswordModal;
+
   public get accountAndNetwork() {
     const { activeAccountAddress, activeNetworkID } = this;
     return { activeAccountAddress, activeNetworkID };
@@ -176,6 +201,42 @@ export default class Layout extends Mappers {
       address,
       symbol: "TON",
       client: tonService.client,
+    });
+  }
+  @Watch("password")
+  onChangePassword() {
+    if (this.passwordErrors.length) {
+      this.passwordErrors = [];
+    }
+  }
+
+  _showTypePasswordModal(address?: string) {
+    return new Promise((resolve, reject) => {
+      this.isTypePasswordModalOpen = true;
+
+      this.resolvePromise = () => {
+        try {
+          if (address) {
+            const keypair = {
+              public: this.getPublicKeyData(address),
+              secret: this.getPrivateData(address, this.password).secret,
+            };
+            resolve({ password: this.password, keypair });
+          } else {
+            this.getPrivateData(this.getKeyIDs[0], this.password);
+            resolve({ password: this.password });
+          }
+
+          this.isTypePasswordModalOpen = false;
+        } catch (error) {
+          this.passwordErrors = ["Invalid password"];
+        }
+      };
+
+      this.rejectPromise = () => {
+        reject(false);
+        this.isTypePasswordModalOpen = false;
+      };
     });
   }
 }

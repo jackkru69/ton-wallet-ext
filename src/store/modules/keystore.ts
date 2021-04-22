@@ -63,9 +63,12 @@ class KeystoreGetters extends Getters<KeystoreState> {
   get getPublicKeyData(): (keyID: string) => string {
     return (keyID: any) => this.state.keys[keyID].public;
   }
-  get getPrivateKeyData(): (keyID: string, password: string) => string {
+  get getPrivateData(): (keyID: string, password: string) => { secret: string; seedPhrase: string } {
     return (keyID: string, password: string) =>
-      decrypt(this.state.keys[keyID].private, this.state.keys[keyID].metadata, password) as string;
+      decrypt(this.state.keys[keyID].private, this.state.keys[keyID].metadata, password) as {
+        secret: string;
+        seedPhrase: string;
+      };
   }
 }
 

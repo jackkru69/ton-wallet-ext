@@ -32,67 +32,19 @@
   </VDialog>
 </template>
 <script lang="ts">
-import { keystoreModuleMapper } from "@/store/modules/keystore";
 import { sliceString } from "@/utils";
-import { Component, Vue, Watch } from "vue-property-decorator";
-
-const Mappers = Vue.extend({
-  computed: {
-    ...keystoreModuleMapper.mapGetters([
-      "getKeyIDs",
-      "getPrivateKeyData",
-      "getPublicKeyData",
-    ]),
-  },
-});
+import { Component, ModelSync, Prop, Vue } from "vue-property-decorator";
 
 @Component({ methods: { sliceString } })
-export default class TypePasswordModal extends Mappers {
+export default class TypePasswordModal extends Vue {
   valid = true;
-  isOpen = false;
 
-  password = "";
-  passwordErrors: string[] = [];
+  @ModelSync("change", "value", { type: String })
+  readonly password!: boolean;
 
-  resolvePromise: any = null;
-  rejectPromise: any = null;
-
-  @Watch("password")
-  onChangePassword() {
-    if (this.passwordErrors.length) {
-      this.passwordErrors = [];
-    }
-  }
-
-  show(address?: string) {
-    return new Promise((resolve, reject) => {
-      this.isOpen = true;
-
-      this.resolvePromise = () => {
-        try {
-          if (address) {
-            const keypair = {
-              public: this.getPublicKeyData(address),
-              secret: this.getPrivateKeyData(address, this.password),
-            };
-            console.log(keypair);
-            resolve({ password: this.password, keypair });
-          } else {
-            this.getPrivateKeyData(this.getKeyIDs[0], this.password);
-            resolve({ password: this.password });
-          }
-
-          this.isOpen = false;
-        } catch (error) {
-          this.passwordErrors = ["Invalid password"];
-        }
-      };
-
-      this.rejectPromise = () => {
-        reject(false);
-        this.isOpen = false;
-      };
-    });
-  }
+  @Prop() isOpen: boolean;
+  @Prop() resolvePromise: any;
+  @Prop() rejectPromise: any;
+  @Prop() passwordErrors: string[];
 }
 </script>
