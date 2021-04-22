@@ -37,7 +37,13 @@
 
         <div class="d-flex justify-end">
           <VBtn to="/" class="mr-4"> Back </VBtn>
-          <VBtn color="primary" type="submit" :disabled="!valid">Create </VBtn>
+          <VBtn
+            :loading="isPending"
+            color="primary"
+            type="submit"
+            :disabled="!valid"
+            >Create
+          </VBtn>
         </div>
       </VForm>
     </Inner>
@@ -50,6 +56,7 @@ import Inner from "@/components/layout/Inner.vue";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
+import { assetToBaseAmount } from "@/utils";
 
 const Mappers = Vue.extend({
   computed: {
@@ -66,6 +73,8 @@ const Mappers = Vue.extend({
 export default class TransferPage extends Mappers {
   valid = true;
 
+  isPending = false;
+
   address = "";
   amount = "";
   message = "";
@@ -73,19 +82,23 @@ export default class TransferPage extends Mappers {
   @Inject() showTypePasswordModal!: any;
 
   async onSubmit() {
-    this.showTypePasswordModal().then(async (result: any) => {
-      if (this.activeAccountAddress) {
-        await this.transferOrProposeTransfer({
-          addressFrom: this.activeAccountAddress,
-          addressTo: this.address,
-          amount: this.amount,
-          client: tonService.client,
-          message: this.message,
-          keypair: result.keypair,
-        });
-        this.$router.push("/");
+    this.showTypePasswordModal(this.activeAccountAddress).then(
+      async (result: any) => {
+        if (this.activeAccountAddress) {
+          this.isPending = true;
+          await this.transferOrProposeTransfer({
+            addressFrom: this.activeAccountAddress,
+            addressTo: this.address,
+            amount: assetToBaseAmount(this.amount, "TON"),
+            client: tonService.client,
+            message: this.message,
+            keypair: result.keypair,
+          });
+          this.isPending = false;
+          this.$router.push("/");
+        }
       }
-    });
+    );
   }
 }
 </script>

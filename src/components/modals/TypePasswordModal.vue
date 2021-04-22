@@ -1,5 +1,5 @@
 <template>
-  <VDialog eager v-model="isOpen" persistent max-width="325px">
+  <VDialog v-model="isOpen" persistent max-width="325px">
     <VCard>
       <VForm
         ref="form"
@@ -40,7 +40,7 @@ export default class TypePasswordModal extends Vue {
   valid = true;
 
   @ModelSync("change", "value", { type: String })
-  readonly password!: boolean;
+  password!: boolean;
 
   @Prop() isOpen: boolean;
   @Prop() resolvePromise: any;

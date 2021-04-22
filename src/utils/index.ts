@@ -28,15 +28,15 @@ export function formatDate(value: number, format = "DD.MM.YYYY, HH:mm") {
   return moment(value).format(format);
 }
 
-export const baseToAssetAmount = (amount: string, currency: "ETH" | "USDT" | "TON") => {
+export const baseToAssetAmount = (amount: string, currency: "ETH" | "USDT" | "TON", fixed?: number) => {
   if (!amount) return "";
   switch (currency) {
     case "ETH":
-      return new BigNumber(amount).dividedBy(1000000000000000000).toFixed(18);
+      return new BigNumber(amount).dividedBy(1000000000000000000).toFixed(fixed || 18);
     case "TON":
-      return new BigNumber(amount).dividedBy(1000000000).toFixed(9);
+      return new BigNumber(amount).dividedBy(1000000000).toFixed(fixed || 9);
     case "USDT":
-      return new BigNumber(amount).dividedBy(1000000000000000000).toFixed(18);
+      return new BigNumber(amount).dividedBy(1000000000000000000).toFixed(fixed || 18);
   }
 };
 

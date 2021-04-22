@@ -67,6 +67,8 @@ const Mappers = Vue.extend({
   components: { Aside, Header, TypePasswordModal },
 })
 export default class Layout extends Mappers {
+  isMounted = false;
+
   isTypePasswordModalOpen = false;
 
   resolvePromise: any = null;
@@ -82,21 +84,21 @@ export default class Layout extends Mappers {
     return { activeAccountAddress, activeNetworkID };
   }
 
-  @Watch("subscriptionBalanceHandle")
-  async close(v: any, oldV: any) {
-    if (oldV) {
-      await tonService.client.net.unsubscribe({
-        handle: oldV,
-      });
-    }
-  }
+  // @Watch("subscriptionBalanceHandle")
+  // async close(v: any, oldV: any) {
+  //   if (oldV) {
+  //     await tonService.client.net.unsubscribe({
+  //       handle: oldV,
+  //     });
+  //   }
+  // }
 
   @Watch("accountAndNetwork")
   async onChangeAccount(val: {
     activeAccountAddress: string | undefined;
     activeNetworkID: number;
   }) {
-    if (this.isStoreRestored) {
+    if (this.isMounted) {
       const account = this.getAccountByAddress(val.activeAccountAddress);
       if (account) {
         const isExist = await checkDeployStatus(
@@ -104,21 +106,22 @@ export default class Layout extends Mappers {
           account.address,
           [0, 1, 2]
         );
+        console.log(isExist);
         if (isExist) {
-          const contract = new TonContract({
-            client: tonService.client,
-            tonPackage: contracts[account.walletType],
-            name: account.walletType,
-            address: account.address,
-          });
-          const responseTx = await contract.run({
-            functionName: "getTransactions",
-          });
-          this.setPendingTransactions({
-            address: this.activeAccountAddress,
-            symbol: "TON",
-            pendingTransactions: responseTx.value.transactions,
-          });
+          // const contract = new TonContract({
+          //   client: tonService.client,
+          //   tonPackage: contracts[account.walletType],
+          //   name: account.walletType,
+          //   address: account.address,
+          // });
+          // const responseTx = await contract.run({
+          //   functionName: "getTransactions",
+          // });
+          // this.setPendingTransactions({
+          //   address: this.activeAccountAddress,
+          //   symbol: "TON",
+          //   pendingTransactions: responseTx.value.transactions,
+          // });
           await this.updateBalance(account.address);
           const responseTxs = await getAccountTxs(
             tonService.client,
@@ -129,20 +132,26 @@ export default class Layout extends Mappers {
             symbol: "TON",
             transactions: responseTxs,
           });
-          const responseAcc = await subscribeAccount(
-            tonService.client,
-            account.address,
-            (params) => {
-              if (params.result.balance) {
-                this.setBalanceByAddressAndTokenSymbol({
-                  address: account.address,
-                  symbol: "TON",
-                  newBalance: params.result.balance,
-                });
-              }
-            }
-          );
-          this.setSubscriptionBalanceHandle(responseAcc.handle);
+          // const responseAcc = await subscribeAccount(
+          //   tonService.client,
+          //   account.address,
+          //   (params) => {
+          //     if (params.result.balance) {
+          //       this.setBalanceByAddressAndTokenSymbol({
+          //         address: account.address,
+          //         symbol: "TON",
+          //         newBalance: params.result.balance,
+          //       });
+          //     }
+          //   }
+          // );
+          // this.setSubscriptionBalanceHandle(responseAcc.handle);
+        } else {
+          this.setTransactions({
+            address: account.address,
+            symbol: "TON",
+            transactions: [],
+          });
         }
       }
     }
@@ -151,6 +160,7 @@ export default class Layout extends Mappers {
   async mounted() {
     // @ts-ignore
     store.restored.then(async () => {
+      this.isMounted = true;
       if (this.activeAccountAddress) {
         const isExist = await checkDeployStatus(
           tonService.client,
@@ -168,41 +178,43 @@ export default class Layout extends Mappers {
             symbol: "TON",
             transactions: responseTxs,
           });
-          const response = await subscribeAccount(
-            tonService.client,
-            this.activeAccountAddress,
-            (params) => {
-              if (params.result.balance) {
-                this.setBalanceByAddressAndTokenSymbol({
-                  address: this.activeAccountAddress,
-                  symbol: "TON",
-                  newBalance: params.result.balance,
-                });
-              }
-            }
-          );
-          this.setSubscriptionBalanceHandle(response.handle);
+          // const response = await subscribeAccount(
+          //   tonService.client,
+          //   this.activeAccountAddress,
+          //   (params) => {
+          //     if (params.result.balance) {
+          //       this.setBalanceByAddressAndTokenSymbol({
+          //         address: this.activeAccountAddress,
+          //         symbol: "TON",
+          //         newBalance: params.result.balance,
+          //       });
+          //     }
+          //   }
+          // );
+          // this.setSubscriptionBalanceHandle(response.handle);
         }
       }
     });
   }
 
-  async beforeDestroy() {
-    if (this.subscriptionBalanceHandle) {
-      await tonService.client.net.unsubscribe({
-        handle: this.subscriptionBalanceHandle,
-      });
-      this.setSubscriptionBalanceHandle(null);
-    }
-  }
+  // async beforeDestroy() {
+  //   if (this.subscriptionBalanceHandle) {
+  //     await tonService.client.net.unsubscribe({
+  //       handle: this.subscriptionBalanceHandle,
+  //     });
+  //     this.setSubscriptionBalanceHandle(null);
+  //   }
+  // }
 
   async updateBalance(address: string | undefined) {
-    await this.updateBalanceByAddress({
-      address,
-      symbol: "TON",
-      client: tonService.client,
-    });
+    if (address)
+      await this.updateBalanceByAddress({
+        address,
+        symbol: "TON",
+        client: tonService.client,
+      });
   }
+
   @Watch("password")
   onChangePassword() {
     if (this.passwordErrors.length) {
@@ -217,16 +229,21 @@ export default class Layout extends Mappers {
       this.resolvePromise = () => {
         try {
           if (address) {
+            const privateData = this.getPrivateData(address, this.password);
             const keypair = {
               public: this.getPublicKeyData(address),
-              secret: this.getPrivateData(address, this.password).secret,
+              secret: privateData.secret,
             };
-            resolve({ password: this.password, keypair });
+            resolve({
+              password: this.password,
+              keypair,
+              seedPhrase: privateData.seedPhrase,
+            });
           } else {
             this.getPrivateData(this.getKeyIDs[0], this.password);
             resolve({ password: this.password });
           }
-
+          this.password = "";
           this.isTypePasswordModalOpen = false;
         } catch (error) {
           this.passwordErrors = ["Invalid password"];

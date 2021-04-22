@@ -11,7 +11,7 @@ import "@mdi/font/css/materialdesignicons.min.css";
 import vuetify from "../plugins/vuetify";
 
 Vue.use(vco);
-Vue.use(Clipboard);
+Vue.use(Clipboard.install);
 
 Vue.config.productionTip = false;
 

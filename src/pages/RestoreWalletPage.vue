@@ -158,8 +158,11 @@ export default class RestoreWalletPage extends Mappers {
   seedPhrase = "";
   numberOfCustodians = 1;
   custodians = [""];
+
   password = "";
   confirmPassword = "";
+  passwordErrors: string[] = [];
+
   seedPhraseTips: string[] = [];
   iSSeedPhraseValid = false;
   isDeployed = false;
@@ -270,7 +273,7 @@ export default class RestoreWalletPage extends Mappers {
       });
       this.$router.push("/");
     } else {
-      this.showTypePasswordModal.then(async (result: any) => {
+      this.showTypePasswordModal().then(async (result: any) => {
         const keypair = await getKeypair();
         await this.addAccount({
           keypair,

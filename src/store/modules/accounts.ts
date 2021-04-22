@@ -13,6 +13,8 @@ import {
 } from "../../utils/index";
 import Vue from "vue";
 import { Store } from "vuex";
+import { BigNumber } from "bignumber.js";
+import { isEmpty } from "lodash";
 
 export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
 
@@ -104,14 +106,19 @@ class AccountsState {
 }
 
 const formatTx = (tx: TxType) => {
-  // const isNegative = new BigNumber(tx.balance_delta).isNegative();
+  const isNegative = new BigNumber(tx.balance_delta).isNegative();
   return {
     ...tx,
     fId: sliceString(tx.id),
-    // fSrc: isNegative ? sliceString(tx.account_addr) : sliceString(tx.in_message.src),
+    // fSrc:
+    //   isNegative && !isEmpty(tx.out_messages)
+    //     ? sliceString(tx.account_addr)
+    //     : sliceString(tx.out_messages[0].src || ""),
     // fDst:
-    //   !isNegative && isEmpty(tx.out_messages) ? sliceString(tx.in_message.dst) : sliceString(tx.out_messages[0].dst),
-    fValue: baseToAssetAmount(tx.balance_delta, "TON"),
+    //   isNegative || isEmpty(tx.out_messages)
+    //     ? sliceString(tx.in_message.dst)
+    //     : sliceString(tx.out_messages[0].dst || ""),
+    fValue: baseToAssetAmount(tx.balance_delta, "TON", 3),
   };
 };
 

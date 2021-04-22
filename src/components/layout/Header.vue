@@ -149,7 +149,7 @@ export default class Header extends Mappers {
         name: `Account ${accountsCount + 1}`,
         client: tonService.client,
         password: result.password,
-        seedPhrase,
+        seedPhrase: seedPhrase?.phrase,
       });
       if (this.$route.path !== "/") this.$router.push("/");
     });

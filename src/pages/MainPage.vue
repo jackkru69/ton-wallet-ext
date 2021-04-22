@@ -5,6 +5,11 @@
       v-model="isCustodiansModalOpen"
       :custodians="account ? account.custodians : []"
     />
+    <AccountDetailsModal
+      v-model="isAccountDetailsModalOpen"
+      :account="account"
+    />
+    <InsufficientFundsModal v-model="isInsufficientFundsModalOpen" />
     <Inner>
       <div class="v-main-page__menu-bar">
         <VTooltip bottom>
@@ -19,8 +24,14 @@
             >
               <template v-slot:default>
                 <div>
-                  <div>{{ account && account.name }}</div>
-                  <div>{{ account && sliceString(account.address) }}</div>
+                  <div>{{ account && account.name ? account.name : "" }}</div>
+                  <div>
+                    {{
+                      account && account.address
+                        ? sliceString(account.address)
+                        : ""
+                    }}
+                  </div>
                 </div>
               </template>
             </VBtn>
@@ -57,7 +68,7 @@
           {{
             account &&
             account.tokens.length &&
-            baseToAssetAmount(account.tokens[0].balance, "TON") +
+            baseToAssetAmount(account.tokens[0].balance, "TON", 3) +
               " " +
               account.tokens[0].symbol
           }}
@@ -123,6 +134,8 @@ import { sendGrams } from "@/ton/ton.utils";
 import { tonService } from "@/background";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
 import AccountDetailsModal from "@/components/modals/AccountDetailsModal.vue";
+import InsufficientFundsModal from "@/components/modals/InsufficientFundsModal.vue";
+import BigNumber from "bignumber.js";
 
 const Mappers = Vue.extend({
   computed: {
@@ -138,6 +151,7 @@ const Mappers = Vue.extend({
       "accountsCount",
       "accounts",
     ]),
+    ...keystoreModuleMapper.mapGetters(["getPublicKeyData"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["updateBalanceByAddress", "deploy"]),
@@ -157,6 +171,7 @@ const Mappers = Vue.extend({
     DeployModal,
     CustodiansModal,
     AccountDetailsModal,
+    InsufficientFundsModal,
   },
   methods: { sliceString, baseToAssetAmount },
 })
@@ -164,6 +179,7 @@ export default class MainPage extends Mappers {
   isAirdropPending = false;
   isCustodiansModalOpen = false;
   isAccountDetailsModalOpen = false;
+  isInsufficientFundsModalOpen = false;
 
   @Inject() showTypePasswordModal!: any;
 
@@ -179,22 +195,22 @@ export default class MainPage extends Mappers {
 
   headersTxs = [
     {
-      text: "id",
+      text: "ID",
       value: "fId",
       sortable: false,
     },
     {
-      text: "src",
+      text: "From",
       value: "fSrc",
       sortable: false,
     },
     {
-      text: "dst",
+      text: "To",
       value: "fDst",
       sortable: false,
     },
     {
-      text: "value",
+      text: "Amount",
       value: "fValue",
       sortable: false,
     },
@@ -239,15 +255,22 @@ export default class MainPage extends Mappers {
 
   transfer() {
     if (this.account) {
-      if (this.account.networks.includes(this.activeNetworkID)) {
-        this.$router.push("/transfer");
+      const isBalanceGreaterThanZero = new BigNumber(
+        this.account.tokens[0].balance
+      ).isGreaterThan(0);
+      if (isBalanceGreaterThanZero) {
+        if (this.account.networks.includes(this.activeNetworkID)) {
+          this.$router.push("/transfer");
+        } else {
+          this.showTypePasswordModal(this.activeAccountAddress).then(
+            async (result: any) => {
+              const deployModal: any = this.$refs.deployModal;
+              await deployModal.onClickDeploy(result);
+            }
+          );
+        }
       } else {
-        this.showTypePasswordModal(this.activeAccountAddress).then(
-          async (result: any) => {
-            const deployModal: any = this.$refs.deployModal;
-            await deployModal.onClickDeploy(result);
-          }
-        );
+        this.isInsufficientFundsModalOpen = true;
       }
     }
   }
@@ -257,6 +280,7 @@ export default class MainPage extends Mappers {
       if (this.activeAccountAddress) {
         this.deleteAccount(this.activeAccountAddress);
         this.removeKey(this.activeAccountAddress);
+        this.setActiveAccountAddress(undefined);
         this.$router.push("/initialize");
       }
     } else {
