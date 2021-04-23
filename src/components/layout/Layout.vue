@@ -45,6 +45,7 @@ const Mappers = Vue.extend({
       "setTransactions",
       "deleteAccount",
       "setPendingTransactions",
+      "updateBalanceByAddressMut",
     ]),
   },
   computed: {
@@ -106,7 +107,6 @@ export default class Layout extends Mappers {
           account.address,
           [0, 1, 2]
         );
-        console.log(isExist);
         if (isExist) {
           // const contract = new TonContract({
           //   client: tonService.client,
@@ -147,6 +147,11 @@ export default class Layout extends Mappers {
           // );
           // this.setSubscriptionBalanceHandle(responseAcc.handle);
         } else {
+          this.updateBalanceByAddressMut({
+            address: account.address,
+            symbol: "TON",
+            newBalance: "0",
+          });
           this.setTransactions({
             address: account.address,
             symbol: "TON",
@@ -192,6 +197,17 @@ export default class Layout extends Mappers {
           //   }
           // );
           // this.setSubscriptionBalanceHandle(response.handle);
+        } else {
+          this.updateBalanceByAddressMut({
+            address: this.activeAccountAddress,
+            symbol: "TON",
+            newBalance: "0",
+          });
+          this.setTransactions({
+            address: this.activeAccountAddress,
+            symbol: "TON",
+            transactions: [],
+          });
         }
       }
     });

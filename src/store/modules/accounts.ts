@@ -14,7 +14,6 @@ import {
 import Vue from "vue";
 import { Store } from "vuex";
 import { BigNumber } from "bignumber.js";
-import { isEmpty } from "lodash";
 
 export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
 
@@ -105,20 +104,36 @@ class AccountsState {
   accounts: AccountInterface[] = [];
 }
 
+const findValue = (transaction: any) => {
+  const outgoing = transaction.out_messages.reduce((total: any, msg: any) => total.plus(msg.value), new BigNumber(0));
+  return new BigNumber(transaction.in_message.value || 0).minus(outgoing);
+};
+
+const findAddress = (transaction: any) => {
+  if (transaction.out_messages.length > 0) {
+    for (const item of transaction.out_messages) {
+      if (item.dst != null) {
+        return item.dst;
+      }
+    }
+    return undefined;
+  } else if (transaction.in_message.src != null) {
+    return transaction.in_message.src;
+  } else {
+    return transaction.in_message.dst;
+  }
+};
+
 const formatTx = (tx: TxType) => {
-  const isNegative = new BigNumber(tx.balance_delta).isNegative();
+  const value = findValue(tx);
+  const address = findAddress(tx);
+
   return {
     ...tx,
     fId: sliceString(tx.id),
-    // fSrc:
-    //   isNegative && !isEmpty(tx.out_messages)
-    //     ? sliceString(tx.account_addr)
-    //     : sliceString(tx.out_messages[0].src || ""),
-    // fDst:
-    //   isNegative || isEmpty(tx.out_messages)
-    //     ? sliceString(tx.in_message.dst)
-    //     : sliceString(tx.out_messages[0].dst || ""),
-    fValue: baseToAssetAmount(tx.balance_delta, "TON", 3),
+    type: value.isLessThan(0) ? "minus" : "plus",
+    address: sliceString(address),
+    fValue: baseToAssetAmount(value.toString(), "TON", 3),
   };
 };
 
@@ -177,7 +192,7 @@ class AccountsMutations extends Mutations<AccountsState> {
     this.state.accounts.push(payload);
   }
 
-  updateBalanceById({
+  updateBalanceByAddressMut({
     address,
     symbol,
     newBalance,
@@ -309,7 +324,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     const account: AccountInterface | undefined = this.getters.getAccountByAddress(address);
 
     const newBalance = await getBalance(client, account!.address);
-    this.mutations.updateBalanceById({ address, symbol, newBalance });
+    this.mutations.updateBalanceByAddressMut({ address, symbol, newBalance });
   }
 
   public setBalanceByAddressAndTokenSymbol({
@@ -321,7 +336,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     symbol: string;
     newBalance: string;
   }) {
-    this.mutations.updateBalanceById({ address, symbol, newBalance: newBalance });
+    this.mutations.updateBalanceByAddressMut({ address, symbol, newBalance: newBalance });
   }
 
   public async deploy({
@@ -388,7 +403,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
             value: amount,
             bounce: true,
             allBalance: false,
-            payload: message,
+            payload: Buffer.from(message).toString("hex"),
           },
         });
         const response = await contract.run({
@@ -407,7 +422,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
             value: amount,
             bounce: false,
             flags: 1,
-            payload: message,
+            payload: Buffer.from(message).toString("hex"),
           },
         });
       }

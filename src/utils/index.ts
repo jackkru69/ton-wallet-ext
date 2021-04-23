@@ -1,4 +1,4 @@
-import { isEmpty, pickBy, identity, toString } from "lodash";
+import { isEmpty } from "lodash";
 import moment from "moment";
 import BigNumber from "bignumber.js";
 
@@ -7,10 +7,6 @@ export function getQueryFromOptions(opts: { [key: string]: any }) {
   return `?${Object.keys(opts)
     .map((key) => `${key}=${opts[key]}`)
     .join("&")}`;
-}
-
-export function removeEmptyPropertyFromObject(obj: object) {
-  return pickBy(obj, identity);
 }
 
 export function getStringifyJsonFromOptionsLoopBack(opts?: { [key: string]: any }, prefix = "filter=") {

@@ -99,18 +99,17 @@
       </VTabs>
       <VTabsItems v-model="tab">
         <VTabItem key="txs">
-          <VDataTable
-            :headers="headersTxs"
-            :items="txs"
-            :items-per-page="5"
-          ></VDataTable>
+          <VDataTable :headers="headersTxs" :items="txs" :items-per-page="5">
+            <template v-slot:[`item.type`]="{ item }">
+              <VChip w :color="item.type === 'minus' ? 'red' : 'green'">
+                {{ item.type === "plus" ? "IN" : "OUT" }}
+              </VChip>
+            </template></VDataTable
+          >
         </VTabItem>
         <VTabItem key="tokens">
-          <VDataTable
-            :headers="[]"
-            :items="[]"
-            :items-per-page="5"
-          ></VDataTable>
+          <VDataTable :headers="[]" :items="[]" :items-per-page="5">
+          </VDataTable>
         </VTabItem>
       </VTabsItems>
     </Inner>
@@ -195,18 +194,18 @@ export default class MainPage extends Mappers {
 
   headersTxs = [
     {
+      text: "",
+      value: "type",
+      sortable: false,
+    },
+    {
       text: "ID",
       value: "fId",
       sortable: false,
     },
     {
-      text: "From",
-      value: "fSrc",
-      sortable: false,
-    },
-    {
-      text: "To",
-      value: "fDst",
+      text: "Address",
+      value: "address",
       sortable: false,
     },
     {

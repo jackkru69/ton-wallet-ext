@@ -16,15 +16,13 @@
         <h4>Wallet type</h4>
         <div class="mb-4">{{ account && account.walletType }}</div>
         <h4>Public key</h4>
-        {{ sliceString(publicKey, 14) }}
-        <VBtn
-          v-clipboard="() => publicKey"
-          type="button"
-          icon
-          class="ml-2 mb-4"
-        >
-          <VIcon> mdi-content-copy </VIcon>
-        </VBtn>
+        <div class="d-flex justify-space-between align-center mb-4">
+          {{ sliceString(publicKey, 12) }}
+          <VBtn v-clipboard="() => publicKey" type="button" icon class="ml-2">
+            <VIcon> mdi-content-copy </VIcon>
+          </VBtn>
+        </div>
+
         <div class="mb-4">
           <VBtn
             @click="onClickExportSeedPhrase"
