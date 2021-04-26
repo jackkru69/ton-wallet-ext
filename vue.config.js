@@ -20,6 +20,13 @@ module.exports = {
         },
       }),
     ],
+    output: {
+      filename: "js/[name].js",
+      chunkFilename: "js/[name].js",
+    },
+  },
+  chainWebpack: (config) => {
+    config.optimization.delete("splitChunks");
   },
   pages: {
     popup: {
@@ -39,7 +46,7 @@ module.exports = {
     browserExtension: {
       componentOptions: {
         background: {
-          entry: "src/background.ts",
+          entry: "src/background.js",
         },
         contentScripts: {
           entries: {
