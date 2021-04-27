@@ -1,11 +1,11 @@
 import PostMessageStream from "post-message-stream";
 
-//@TODO check cross-domain safety
 const stream = new PostMessageStream({ name: "injection", target: "content-script" });
-const responses = [];
-const timeout = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-//@TODO infinity
-const waitResponse = async (requestId) => {
+const responses: any = [];
+
+const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitResponse = async (requestId: any): Promise<any> => {
   for (let i = responses.length - 1; i >= 0; i--) {
     if (responses[i].requestId === requestId) {
       const response = responses[i];
@@ -20,7 +20,7 @@ const waitResponse = async (requestId) => {
   await timeout(500);
   return await waitResponse(requestId);
 };
-const request = async (method, params) => {
+const request = async (method: any, params: any) => {
   const requestId = Math.random()
     .toString(36)
     .substring(7);
@@ -30,11 +30,11 @@ const request = async (method, params) => {
 };
 
 window.freeton1 = {
-  request: (method, params) => request(method, params),
+  request: (method: any, params: any) => request(method, params),
   eventListener: null,
 };
-console.log("ddddd");
-stream.on("data", (data) => {
+
+stream.on("data", (data: any) => {
   if (data.type === "response") {
     responses.push(data.data);
   } else if (data.type === "event" && null !== window.freeton1.eventListener) {

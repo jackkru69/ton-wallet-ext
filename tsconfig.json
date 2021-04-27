@@ -13,7 +13,7 @@
     "strictPropertyInitialization": false,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": ["webpack-env", "mocha", "chai", "node", "core-js"],
+    "types": ["webpack-env", "mocha", "chai", "node", "core-js", "chrome"],
     "paths": {
       "@/*": ["src/*"]
     },
@@ -27,8 +27,8 @@
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "src/custom.d.ts",
-    "src/background.js",
-    "src/content-script.js"
+    "src/background.ts",
+    "src/content-script.ts"
   ],
   "exclude": ["node_modules"]
 }

@@ -39,18 +39,18 @@ module.exports = {
       filename: "index.html",
     },
     injection: {
-      entry: "./src/injection.js",
+      entry: "./src/injection.ts",
     },
   },
   pluginOptions: {
     browserExtension: {
       componentOptions: {
         background: {
-          entry: "src/background.js",
+          entry: "src/background.ts",
         },
         contentScripts: {
           entries: {
-            "content-script": ["src/content-script.js"],
+            "content-script": ["src/content-script.ts"],
           },
         },
       },

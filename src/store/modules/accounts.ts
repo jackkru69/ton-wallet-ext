@@ -322,9 +322,10 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     client: TonClient;
   }) {
     const account: AccountInterface | undefined = this.getters.getAccountByAddress(address);
-
-    const newBalance = await getBalance(client, account!.address);
-    this.mutations.updateBalanceByAddressMut({ address, symbol, newBalance });
+    if (account) {
+      const newBalance = await getBalance(client, account.address);
+      this.mutations.updateBalanceByAddressMut({ address, symbol, newBalance });
+    }
   }
 
   public setBalanceByAddressAndTokenSymbol({
