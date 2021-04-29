@@ -239,6 +239,10 @@ class AccountsMutations extends Mutations<AccountsState> {
     Vue.delete(this.state.accounts, accountIndex);
   }
 
+  deleteAllAccounts() {
+    this.state.accounts = [];
+  }
+
   setIsExist({ address, exist }: { address: string | undefined; exist: boolean }) {
     const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
     this.state.accounts[accountIndex].isExist = exist;

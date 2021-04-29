@@ -32,8 +32,7 @@ const extensionId = browser.runtime.id;
 
 const handleMessage = async (request: any, sender: any) => {
   const result: any = {};
-  console.log(sender);
-  console.log(request);
+
   try {
     if (extensionId !== sender.id) {
       throw "extensionId <> senderId";

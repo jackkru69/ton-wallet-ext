@@ -93,6 +93,10 @@ class KeystoreMutations extends Mutations<KeystoreState> {
   removeKey(keyID: string) {
     Vue.delete(this.state.keys, keyID);
   }
+
+  removeAllKey() {
+    this.state.keys = [];
+  }
 }
 
 class KeystoreActions extends Actions<KeystoreState, KeystoreGetters, KeystoreMutations, KeystoreActions> {

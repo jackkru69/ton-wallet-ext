@@ -69,6 +69,11 @@
               <VListItemTitle>Restore account</VListItemTitle>
             </VListItemContent>
           </VListItem>
+          <VListItem @click="onClickResetWallet">
+            <VListItemContent>
+              <VListItemTitle>Reset wallet</VListItemTitle>
+            </VListItemContent>
+          </VListItem>
         </VList>
       </VCard>
     </VMenu>
@@ -78,12 +83,17 @@
 
   <script lang="ts">
 import { tonService } from "@/background";
+import { browserVuexLocalStorage } from "@/store";
 import { accountsModuleMapper } from "@/store/modules/accounts";
+import { keystoreModuleMapper } from "@/store/modules/keystore";
 import { networksModuleMapper } from "@/store/modules/networks";
 
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
+import { Promise } from "core-js";
+import { concat } from "core-js/core/array";
 import { isEmpty } from "lodash";
+import { resolve } from "node:dns";
 import { Component, Inject, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
@@ -92,7 +102,12 @@ const Mappers = Vue.extend({
       "setNetwork",
       "setActiveAccountAddress",
     ]),
+    ...accountsModuleMapper.mapMutations([
+      "deleteAccount",
+      "deleteAllAccounts",
+    ]),
     ...accountsModuleMapper.mapActions(["addAccount"]),
+    ...keystoreModuleMapper.mapMutations(["removeKey", "removeAllKey"]),
     isEmpty,
   },
   computed: {
@@ -152,6 +167,14 @@ export default class Header extends Mappers {
         seedPhrase: seedPhrase?.phrase,
       });
       if (this.$route.path !== "/") this.$router.push("/");
+    });
+  }
+  onClickResetWallet() {
+    this.showTypePasswordModal().then(() => {
+      this.deleteAllAccounts();
+      this.removeAllKey();
+      this.setActiveAccountAddress(undefined);
+      this.$router.push("/initialize");
     });
   }
 }
