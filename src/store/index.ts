@@ -8,7 +8,7 @@ import VuexPersistence from "vuex-persist";
 
 Vue.use(Vuex);
 
-const browserVuexLocalStorage = {
+export const browserVuexLocalStorage = {
   setItem: (key: string | number, value: any) => {
     const newItemCache: any = {}; // note: storage.local needs an object with a property of the key name, so newItemCache is not what we're saving, value is.
     newItemCache[key] = value;
@@ -37,47 +37,11 @@ const browserVuexLocalStorage = {
     }),
 };
 
-const browserKeystoreLocalStorage = {
-  setItem: (key: string | number, value: any) => {
-    const newItemCache: any = {}; // note: storage.local needs an object with a property of the key name, so newItemCache is not what we're saving, value is.
-    newItemCache[key] = value;
-    // @ts-ignore
-    return browser.storage.local.set(newItemCache);
-  },
-  getItem: (key: any) => {
-    // @ts-ignore
-    return browser.storage.local.get(key).then((data: any) => data[key]);
-  },
-  removeItem: (key: string | string[]) => {
-    // @ts-ignore
-    return browser.storage.local.remove(key);
-  },
-  clear: () => {
-    // @ts-ignore
-    return browser.storage.local.clear();
-  },
-  // @ts-ignore
-  length: () => browser.storage.local.get("keystore").then((data: any) => data["keystore"].length),
-  key: (): Promise<string> =>
-    new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("keystore");
-      }, 100);
-    }),
-};
-
 export const vuexLocal = new VuexPersistence({
   storage: browserVuexLocalStorage,
   asyncStorage: true,
   key: "vuex",
-  modules: ["accounts", "wallet"],
-});
-
-export const keystoreLocal = new VuexPersistence({
-  storage: browserKeystoreLocalStorage,
-  asyncStorage: true,
-  key: "keystore",
-  modules: ["keystore"],
+  modules: ["accounts", "wallet", "keystore"],
 });
 
 export const store = createStore(root, {
@@ -104,6 +68,5 @@ export const store = createStore(root, {
       ],
     }),
     vuexLocal.plugin,
-    keystoreLocal.plugin,
   ],
 });

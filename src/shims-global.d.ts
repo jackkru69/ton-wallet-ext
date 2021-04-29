@@ -1,9 +1,8 @@
 export {};
 declare global {
   interface Window {
-    freeton1: {
+    ton: {
       request: (method: any, params: any) => any;
-      eventListener: any;
     };
   }
 }

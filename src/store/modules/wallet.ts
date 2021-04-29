@@ -1,7 +1,8 @@
 import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-module";
+import { Store } from "vuex";
 
 export type Network = "http://0.0.0.0" | "http://net.ton.dev" | "http://main.ton.dev";
-
+const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 class WalletState {
   isStoreRestored = false;
   activeNetworkID = 0;
@@ -50,7 +51,25 @@ class WalletMutations extends Mutations<WalletState> {
   }
 }
 
-class WalletActions extends Actions<WalletState, WalletGetters, WalletMutations, WalletActions> {}
+class WalletActions extends Actions<WalletState, WalletGetters, WalletMutations, WalletActions> {
+  store!: Store<any>;
+
+  $init(store: Store<any>): void {
+    this.store = store;
+  }
+  async isLoggedIn() {
+    const accountsCount = await this.store.getters["accounts/accountsCount"];
+    return accountsCount > 0;
+  }
+
+  async waitLoggedIn(): Promise<any> {
+    if (await this.isLoggedIn()) {
+      return;
+    }
+    await timeout(500);
+    return await this.waitLoggedIn();
+  }
+}
 
 export const wallet = new Module({
   state: WalletState,

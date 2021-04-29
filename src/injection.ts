@@ -20,6 +20,7 @@ const waitResponse = async (requestId: any): Promise<any> => {
   await timeout(500);
   return await waitResponse(requestId);
 };
+
 const request = async (method: any, params: any) => {
   const requestId = Math.random()
     .toString(36)
@@ -29,15 +30,12 @@ const request = async (method: any, params: any) => {
   return waitResponse(requestId);
 };
 
-window.freeton1 = {
+window.ton = {
   request: (method: any, params: any) => request(method, params),
-  eventListener: null,
 };
 
 stream.on("data", (data: any) => {
   if (data.type === "response") {
     responses.push(data.data);
-  } else if (data.type === "event" && null !== window.freeton1.eventListener) {
-    window.freeton1.eventListener(data.data);
   }
 });
