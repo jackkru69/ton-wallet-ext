@@ -6,7 +6,7 @@ import { wallet } from "./modules/wallet";
 import { keystore } from "./modules/keystore";
 
 class RootState {
-  isLocked = true;
+  isLocked = false;
 }
 
 class RootGetters extends Getters<RootState> {

@@ -32,7 +32,6 @@
           outlined
           hide-details
           label="Message"
-          readonly
         ></VTextField>
 
         <div class="d-flex justify-end">

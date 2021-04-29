@@ -178,11 +178,13 @@ export default class Layout extends Mappers {
             tonService.client,
             this.activeAccountAddress
           );
+
           this.setTransactions({
             address: this.activeAccountAddress,
             symbol: "TON",
             transactions: responseTxs,
           });
+
           // const response = await subscribeAccount(
           //   tonService.client,
           //   this.activeAccountAddress,

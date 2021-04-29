@@ -1,5 +1,5 @@
 import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-module";
-import { KeyPair, TonClient } from "@tonclient/core";
+import { KeyPair, TonClient, signerNone } from "@tonclient/core";
 import TonContract from "@/ton/ton.contract";
 import SafeMultisig from "@/contracts/SafeMultisigWallet";
 import SetCodeMultisig from "@/contracts/SetCodeMultisigWallet";
@@ -14,7 +14,7 @@ import {
 import Vue from "vue";
 import { Store } from "vuex";
 import { BigNumber } from "bignumber.js";
-
+import Transfer from "@/contracts/Transfer";
 export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
 
 export const walletsTypes = [
@@ -70,6 +70,7 @@ export type TxType = {
     id: string;
     msg_type_name: string;
     src: string;
+    body: string;
     status_name: string;
     value: string;
   };
@@ -78,9 +79,11 @@ export type TxType = {
     id: string;
     msg_type_name: string;
     src: string;
+    body: string;
     status_name: string;
     value: string;
   }[];
+  comment: string;
   now: number;
   status_name: string;
   tr_type_name: string;
@@ -127,7 +130,6 @@ const findAddress = (transaction: any) => {
 const formatTx = (tx: TxType) => {
   const value = findValue(tx);
   const address = findAddress(tx);
-
   return {
     ...tx,
     fId: sliceString(tx.id),
@@ -138,7 +140,6 @@ const formatTx = (tx: TxType) => {
 };
 
 const formatPendingTx = (tx: TxPendingType) => {
-  // const isNegative = new BigNumber(tx.balance_delta).isNegative();
   return {
     ...tx,
     fId: sliceString(tx.id),
@@ -158,7 +159,7 @@ class AccountsGetters extends Getters<AccountsState> {
     };
   }
 
-  public get getFormattedTxsByAddress(): (address: string | undefined, symbol: string) => TxType[] | undefined {
+  public get getFormattedTxsByAddress(): (address: string | undefined, symbol: string) => any {
     return (address, tokenId) =>
       this.getters.getTokenBySymbol(address, tokenId)?.transactions.map((tx) => formatTx(tx));
   }
@@ -396,6 +397,20 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         keys: keypair,
         address: account.address,
       });
+      const body = (
+        await client.abi.encode_message_body({
+          abi: { type: "Contract", value: Transfer.abi },
+          call_set: {
+            function_name: "transfer",
+            input: {
+              comment: Buffer.from(message).toString("hex"),
+            },
+          },
+          is_internal: true,
+          signer: signerNone(),
+        })
+      ).body;
+
       if (account.custodians.length > 1) {
         await contract.call({
           functionName: "submitTransaction",
@@ -404,7 +419,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
             value: amount,
             bounce: true,
             allBalance: false,
-            payload: Buffer.from(message).toString("hex"),
+            payload: body,
           },
         });
         const response = await contract.run({
@@ -423,7 +438,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
             value: amount,
             bounce: false,
             flags: 1,
-            payload: Buffer.from(message).toString("hex"),
+            payload: body,
           },
         });
       }

@@ -18,7 +18,6 @@
             outlined
             label="Password"
             type="password"
-            autofocus
             :error-messages="passwordErrors"
           ></VTextField
         ></VCardText>

@@ -213,6 +213,11 @@ export default class MainPage extends Mappers {
       value: "fValue",
       sortable: false,
     },
+    {
+      text: "Comment",
+      value: "comment",
+      sortable: false,
+    },
   ];
 
   public get account(): AccountInterface | undefined {

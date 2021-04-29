@@ -1,5 +1,7 @@
 import { KeyPair, ResultOfMnemonicFromRandom, SortDirection, TonClient } from "@tonclient/core";
 import giverPackage from "./giver.package";
+import Transfer from "@/contracts/Transfer";
+import { TxType } from "@/store/modules/accounts";
 
 export const SEED_PHRASE_DICTIONARY_ENGLISH = 1;
 export const HD_PATH = "m/44'/396'/0'/0/0";
@@ -114,9 +116,39 @@ export async function getAccountTxs(client: TonClient, address: string) {
     ],
     limit: 10,
     result:
-      "id account_addr status_name tr_type_name balance_delta(format:DEC) in_message { id msg_type_name status_name src dst value(format:DEC) } out_messages { id msg_type_name status_name src dst value(format:DEC) } now",
+      "id account_addr status_name tr_type_name balance_delta(format:DEC) in_message { id msg_type_name status_name src dst value(format:DEC) body } out_messages { id msg_type_name status_name src dst value(format:DEC) body} now",
   });
-  return result;
+  const txsWithComment = await Promise.all(
+    result.map(async (tx: TxType) => {
+      let response;
+      if ((tx.in_message && tx.in_message.body) || (tx.out_messages.length && tx.out_messages[0].body)) {
+        try {
+          const responseIn = await client.abi.decode_message_body({
+            body: tx.in_message.body,
+            is_internal: true,
+            abi: { type: "Contract", value: Transfer.abi },
+          });
+          response = responseIn;
+          // eslint-disable-next-line no-empty
+        } catch (error) {}
+        try {
+          const responseOut = await client.abi.decode_message_body({
+            body: tx.out_messages[0].body,
+            is_internal: true,
+            abi: { type: "Contract", value: Transfer.abi },
+          });
+          response = responseOut;
+          // eslint-disable-next-line no-empty
+        } catch (error) {}
+
+        const comment: string = response ? Buffer.from(response.value.comment, "hex").toString("utf8") : "";
+        return { ...tx, comment };
+      }
+
+      return { ...tx, comment: "" };
+    })
+  );
+  return txsWithComment;
 }
 
 export async function checkDeployStatus(client: TonClient, address: string, statuses: number[]) {
