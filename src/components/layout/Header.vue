@@ -69,6 +69,11 @@
               <VListItemTitle>Restore account</VListItemTitle>
             </VListItemContent>
           </VListItem>
+          <VListItem link to="/change-password">
+            <VListItemContent>
+              <VListItemTitle>Change password</VListItemTitle>
+            </VListItemContent>
+          </VListItem>
           <VListItem @click="onClickResetWallet">
             <VListItemContent>
               <VListItemTitle>Reset wallet</VListItemTitle>

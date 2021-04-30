@@ -57,7 +57,7 @@ function encrypt(privateData: any, metadata: KeyMetadata, password: string): str
 }
 
 class KeystoreGetters extends Getters<KeystoreState> {
-  get getKeyIDs() {
+  get getKeyIDs(): string[] {
     return Object.keys(this.state.keys);
   }
   get getPublicKeyData(): (keyID: string) => string {
@@ -73,7 +73,7 @@ class KeystoreGetters extends Getters<KeystoreState> {
 }
 
 class KeystoreMutations extends Mutations<KeystoreState> {
-  public saveKey({
+  public saveKeyMut({
     keyID,
     metadata,
     privateData,
@@ -93,7 +93,6 @@ class KeystoreMutations extends Mutations<KeystoreState> {
   removeKey(keyID: string) {
     Vue.delete(this.state.keys, keyID);
   }
-
   removeAllKey() {
     this.state.keys = [];
   }
@@ -115,7 +114,7 @@ class KeystoreActions extends Actions<KeystoreState, KeystoreGetters, KeystoreMu
       nonce: randomNonce(),
       iterations,
     };
-    this.mutations.saveKey({
+    this.mutations.saveKeyMut({
       keyID,
       metadata,
       publicData,
@@ -128,6 +127,29 @@ class KeystoreActions extends Actions<KeystoreState, KeystoreGetters, KeystoreMu
       throw new Error(`Cannot delete key ${keyID}. Key not found.`);
     }
     this.mutations.removeKey(keyID);
+  }
+
+
+  public changePassword({ password, newPassword }: { password: string; newPassword: string }) {
+    this.getters.getKeyIDs.forEach((keyID: string) => {
+      try {
+        const publicData = this.getters.getPublicKeyData(keyID)
+        const privateData = this.getters.getPrivateData(keyID, password)
+
+        const metadata = {
+          nonce: randomNonce(),
+          iterations,
+        };
+        this.mutations.saveKeyMut({
+          keyID,
+          metadata,
+          publicData,
+          privateData: encrypt(privateData, metadata, newPassword),
+        });
+      } catch (error) {
+        throw new Error("Invalid password")
+      }
+    })
   }
 }
 

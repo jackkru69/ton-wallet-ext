@@ -7,6 +7,7 @@ import TransferPage from "@/pages/TransferPage.vue";
 import RestoreWalletPage from "@/pages/RestoreWalletPage.vue";
 import LockScreenPage from "@/pages/LockScreenPage.vue";
 import EasyAddPage from "@/pages/EasyAddPage.vue";
+import ChangePasswordPage from "@/pages/ChangePasswordPage.vue";
 
 import { store } from "@/store";
 
@@ -53,6 +54,11 @@ const routes: Array<RouteConfig> = [
     path: "/transfer",
     name: "TransferPage",
     component: TransferPage,
+    meta: { isRequiredAuth: true, isInitPages: false },
+  }, {
+    path: "/change-password",
+    name: "ChangePasswordPage",
+    component: ChangePasswordPage,
     meta: { isRequiredAuth: true, isInitPages: false },
   },
 ];

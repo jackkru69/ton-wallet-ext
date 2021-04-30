@@ -61,7 +61,7 @@ export const store = createStore(root, {
         "accounts/updateBalanceByAddressMut",
         "keystore/removeAllKey",
         "keystore/removeKey",
-        "keystore/saveKey",
+        "keystore/saveKeyMut",
         "networks/addNetwork",
         "wallet/setActiveAccountAddress",
         "wallet/setIsStoreRestored",

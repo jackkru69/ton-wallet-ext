@@ -68,8 +68,6 @@ export default class LockScreenPage extends Mappers {
     } catch (error) {
       this.passwordErrors = ["Invalid password"];
     }
-
-    // this.$router.push("/");
   }
 }
 </script>
