@@ -93,6 +93,7 @@ export default class CreateWalletPage extends Mappers {
       client: tonService.client,
       password: password,
       seedPhrase: seedPhrase?.phrase,
+      isRestoredWithKeyPair: false,
     });
     this.$router.push("/");
   }

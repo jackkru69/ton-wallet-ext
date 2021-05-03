@@ -59,6 +59,7 @@ export interface AccountInterface {
   tokens: TokenType[];
   networks: Array<number | null>;
   isExist: boolean;
+  isRestoredWithKeyPair: boolean;
 }
 
 export type TxType = {
@@ -270,6 +271,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     isDeployed,
     seedPhrase,
     password,
+    isRestoredWithKeyPair,
   }: {
     custodians: string[];
     keypair: KeyPair;
@@ -277,9 +279,10 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     name: string;
     network: number | null;
     client: TonClient;
-    seedPhrase: string;
+    seedPhrase?: string;
     isDeployed?: boolean;
     password: string;
+    isRestoredWithKeyPair: boolean;
   }) {
     const contract = new TonContract({
       client: client,
@@ -302,6 +305,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       custodians,
       networks: isDeployed ? [network] : [],
       isExist: !!isDeployed,
+      isRestoredWithKeyPair,
       tokens: [
         {
           name: name,

@@ -240,6 +240,7 @@ export default class CreateWalletPage extends Mappers {
         client: tonService.client,
         password,
         seedPhrase,
+        isRestoredWithKeyPair: false,
       });
       this.$router.push("/");
     } else {
@@ -253,6 +254,7 @@ export default class CreateWalletPage extends Mappers {
           client: tonService.client,
           password: result.password,
           seedPhrase,
+          isRestoredWithKeyPair: false,
         });
         this.$router.push("/");
       });

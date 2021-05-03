@@ -71,7 +71,6 @@ const Mappers = Vue.extend({
     ]),
   },
   methods: {
-    ...accountsModuleMapper.mapActions(["addAccount"]),
     ...keystoreModuleMapper.mapActions(["changePassword"]),
     isEmpty,
   },

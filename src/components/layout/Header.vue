@@ -170,6 +170,7 @@ export default class Header extends Mappers {
         client: tonService.client,
         password: result.password,
         seedPhrase: seedPhrase?.phrase,
+        isRestoredWithKeyPair: false,
       });
       if (this.$route.path !== "/") this.$router.push("/");
     });

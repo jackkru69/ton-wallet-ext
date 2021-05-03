@@ -25,8 +25,25 @@
           label="Wallet type"
           outlined
         ></VSelect>
+        <VSelect
+          class="mb-4"
+          v-model="restoryType"
+          :items="[
+            {
+              text: 'Seed phrase',
+              value: 'seedPhrase',
+            },
+            {
+              text: 'Keypair',
+              value: 'keypair',
+            },
+          ]"
+          label="Restory type"
+          outlined
+        ></VSelect>
         <VTextField
           class="mb-4"
+          v-if="restoryType === 'seedPhrase'"
           v-model.trim="seedPhrase"
           outlined
           label="Seed phrase"
@@ -36,7 +53,37 @@
           ]"
           :success-messages="seedPhraseTips"
         ></VTextField>
-        <div v-if="!isEmpty(seedPhraseTips) && iSSeedPhraseValid">
+        <VTextField
+          v-if="restoryType === 'keypair'"
+          class="mb-4"
+          v-model.trim="publicKey"
+          outlined
+          label="Public key"
+          :rules="[
+            (v) => !!v || 'Public key is required',
+            (v) => !iSSeedPhraseValid || 'Public key is invalid',
+          ]"
+          :success-messages="seedPhraseTips"
+        ></VTextField>
+        <VTextField
+          v-if="restoryType === 'keypair'"
+          class="mb-4"
+          v-model.trim="secretKey"
+          outlined
+          label="Secret key"
+          :rules="[
+            (v) => !!v || 'Secret key is required',
+            (v) => !iSSeedPhraseValid || 'Secret key is invalid',
+          ]"
+          :success-messages="seedPhraseTips"
+        ></VTextField>
+        <div
+          v-if="
+            restoryType === 'seedPhrase'
+              ? !isEmpty(seedPhraseTips) && iSSeedPhraseValid
+              : !isEmpty(keyPairTips) && publicKey && secretKey
+          "
+        >
           <VTextField
             v-for="(custodian, index) in custodians"
             :key="index"
@@ -105,8 +152,13 @@
           <VBtn
             color="primary"
             type="submit"
-            :disabled="!valid || !name || !seedPhrase"
-            >Restore
+            :disabled="
+              restoryType === 'seedPhrase'
+                ? !valid || !name || !seedPhrase
+                : !valid || !name || (!publicKey && !secretKey)
+            "
+          >
+            Restore
           </VBtn>
         </div>
       </VForm>
@@ -155,7 +207,10 @@ export default class RestoreWalletPage extends Mappers {
 
   name = "";
   walletType: WalletType = "safe-multisig";
+  restoryType = "seedPhrase";
   seedPhrase = "";
+  publicKey = "";
+  secretKey = "";
   numberOfCustodians = 1;
   custodians = [""];
 
@@ -164,6 +219,7 @@ export default class RestoreWalletPage extends Mappers {
   passwordErrors: string[] = [];
 
   seedPhraseTips: string[] = [];
+  keyPairTips: string[] = [];
   iSSeedPhraseValid = false;
   isDeployed = false;
   data() {
@@ -174,12 +230,20 @@ export default class RestoreWalletPage extends Mappers {
 
   @Inject() showTypePasswordModal!: any;
 
-  public get onChangeSeedPhraseAndWalletTypeAndNetwork() {
-    const { seedPhrase, walletType, activeNetworkID } = this;
+  public get onChangeFields() {
+    const {
+      seedPhrase,
+      walletType,
+      activeNetworkID,
+      publicKey,
+      secretKey,
+    } = this;
     return {
       seedPhrase,
       walletType,
       activeNetworkID,
+      publicKey,
+      secretKey,
     };
   }
 
@@ -187,47 +251,82 @@ export default class RestoreWalletPage extends Mappers {
     return this.seedPhrase.split(" ").length;
   }
 
-  @Watch("onChangeSeedPhraseAndWalletTypeAndNetwork")
-  async onChangeSeedPhrase() {
+  @Watch("onChangeFields")
+  async onChange() {
     try {
-      const response = await validateSeedPhrase(
-        tonService.client,
-        this.seedPhrase,
-        this.seedPhraseWorldCount
-      );
+      if (this.restoryType === "seedPhrase") {
+        const response = await validateSeedPhrase(
+          tonService.client,
+          this.seedPhrase,
+          this.seedPhraseWorldCount
+        );
 
-      const isValid = response && response.valid;
-      this.iSSeedPhraseValid = isValid;
+        const isValid = response && response.valid;
+        this.iSSeedPhraseValid = isValid;
 
-      if (isValid) {
-        const keypair = await this.getKeypair();
-        this.custodians = [`0x${keypair.public}`];
-        this.isDeployed = false;
+        if (isValid) {
+          const keypair = await this.getKeypair();
+          this.custodians = [`0x${keypair.public}`];
+          this.isDeployed = false;
 
-        const contract = new TonContract({
-          client: tonService.client,
-          name: this.walletType,
-          tonPackage: contracts[this.walletType],
-          keys: keypair,
-        });
-        await contract.calcAddress();
+          const contract = new TonContract({
+            client: tonService.client,
+            name: this.walletType,
+            tonPackage: contracts[this.walletType],
+            keys: keypair,
+          });
+          await contract.calcAddress();
 
-        const response = await contract.run({
-          functionName: "getCustodians",
-        });
+          const response = await contract.run({
+            functionName: "getCustodians",
+          });
 
-        const custodians = response.value.custodians;
-        this.seedPhraseTips = [];
-        if (custodians) {
-          this.isDeployed = true;
-          this.custodians = custodians.map(
-            (custodian: any) => custodian.pubkey
-          );
-          this.numberOfCustodians = custodians.length;
+          const custodians = response.value.custodians;
+          this.seedPhraseTips = [];
+          if (custodians) {
+            this.isDeployed = true;
+            this.custodians = custodians.map(
+              (custodian: any) => custodian.pubkey
+            );
+            this.numberOfCustodians = custodians.length;
+          }
+        }
+      }
+      if (this.restoryType === "keypair") {
+        if (this.publicKey && this.secretKey) {
+          this.custodians = [`0x${this.publicKey}`];
+          this.isDeployed = false;
+
+          const contract = new TonContract({
+            client: tonService.client,
+            name: this.walletType,
+            tonPackage: contracts[this.walletType],
+            keys: { public: this.publicKey, secret: this.secretKey },
+          });
+          await contract.calcAddress();
+
+          const response = await contract.run({
+            functionName: "getCustodians",
+          });
+
+          const custodians = response.value.custodians;
+          this.keyPairTips = [];
+          if (custodians) {
+            this.isDeployed = true;
+            this.custodians = custodians.map(
+              (custodian: any) => custodian.pubkey
+            );
+            this.numberOfCustodians = custodians.length;
+          }
         }
       }
     } catch (error) {
-      this.seedPhraseTips.push("The account is not active, enter custodians");
+      if (this.restoryType === "seedPhrase") {
+        this.seedPhraseTips.push("The account is not active, enter custodians");
+      }
+      if (this.restoryType === "keypair") {
+        this.keyPairTips.push("The account is not active, enter custodians");
+      }
     }
   }
 
@@ -258,22 +357,8 @@ export default class RestoreWalletPage extends Mappers {
       password,
       seedPhrase,
     } = this;
-    if (this.accountsCount === 0) {
-      const keypair = await getKeypair();
-      await this.addAccount({
-        keypair,
-        custodians,
-        walletType,
-        network: activeNetworkID,
-        name,
-        client: tonService.client,
-        isDeployed,
-        password,
-        seedPhrase,
-      });
-      this.$router.push("/");
-    } else {
-      this.showTypePasswordModal().then(async (result: any) => {
+    if (this.restoryType === "seedPhrase") {
+      if (this.accountsCount === 0) {
         const keypair = await getKeypair();
         await this.addAccount({
           keypair,
@@ -283,11 +368,67 @@ export default class RestoreWalletPage extends Mappers {
           name,
           client: tonService.client,
           isDeployed,
-          password: result.password,
+          password,
           seedPhrase,
+          isRestoredWithKeyPair: false,
         });
         this.$router.push("/");
-      });
+      } else {
+        this.showTypePasswordModal().then(async (result: any) => {
+          const keypair = await getKeypair();
+          await this.addAccount({
+            keypair,
+            custodians,
+            walletType,
+            network: activeNetworkID,
+            name,
+            client: tonService.client,
+            isDeployed,
+            password: result.password,
+            seedPhrase,
+            isRestoredWithKeyPair: false,
+          });
+          this.$router.push("/");
+        });
+      }
+    }
+    if (this.restoryType === "keypair") {
+      if (this.accountsCount === 0) {
+        const keypair = {
+          public: this.publicKey,
+          secret: this.secretKey,
+        };
+        await this.addAccount({
+          keypair,
+          custodians,
+          walletType,
+          network: activeNetworkID,
+          name,
+          client: tonService.client,
+          isDeployed,
+          password,
+          seedPhrase: "",
+          isRestoredWithKeyPair: true,
+        });
+        this.$router.push("/");
+      } else {
+        this.showTypePasswordModal().then(async (result: any) => {
+          const keypair = await getKeypair();
+          await this.addAccount({
+            keypair,
+            custodians,
+            walletType,
+            network: activeNetworkID,
+            name,
+            client: tonService.client,
+            isDeployed,
+            password: result.password,
+            seedPhrase: "",
+            isRestoredWithKeyPair: true,
+          });
+          this.$router.push("/");
+        });
+      }
     }
   }
 }
