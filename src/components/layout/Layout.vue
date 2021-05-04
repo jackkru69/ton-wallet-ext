@@ -24,10 +24,9 @@ import Header from "@/components/layout/Header.vue";
 import { tonService } from "@/background";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
-import { accountsModuleMapper, contracts } from "@/store/modules/accounts";
+import { accountsModuleMapper } from "@/store/modules/accounts";
 import { store } from "@/store";
 import { checkDeployStatus } from "@/ton/ton.utils";
-import TonContract from "@/ton/ton.contract";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
 
 const Mappers = Vue.extend({

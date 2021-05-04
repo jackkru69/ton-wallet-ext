@@ -298,29 +298,29 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         })
       ).body;
 
-      if (account.custodians.length > 1) {
-        await contract.call({
-          functionName: "submitTransaction",
-          input: {
-            dest: addressTo,
-            value: amount,
-            bounce: true,
-            allBalance: false,
-            payload: body,
-          },
-        });
-      } else {
-        await contract.call({
-          functionName: "sendTransaction",
-          input: {
-            dest: addressTo,
-            value: amount,
-            bounce: false,
-            flags: 1,
-            payload: body,
-          },
-        });
-      }
+      // if (account.custodians.length > 1) {
+      await contract.call({
+        functionName: "submitTransaction",
+        input: {
+          dest: addressTo,
+          value: amount,
+          bounce: true,
+          allBalance: false,
+          payload: body,
+        },
+      });
+      // } else {
+      //   await contract.call({
+      //     functionName: "sendTransaction",
+      //     input: {
+      //       dest: addressTo,
+      //       value: amount,
+      //       bounce: false,
+      //       flags: 1,
+      //       payload: body,
+      //     },
+      //   });
+      // }
     }
   }
 }

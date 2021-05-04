@@ -161,8 +161,11 @@ export function getExplorerLink(explorer: string, address: string) {
 }
 
 const findValue = (transaction: any) => {
-  const outgoing = transaction.out_messages.reduce((total: any, msg: any) => total.plus(msg.value), new BigNumber(0));
-  return new BigNumber(transaction.in_message.value || 0).minus(outgoing);
+  const outgoing = transaction.out_messages.reduce(
+    (total: any, msg: any) => total.plus(msg.value !== null ? msg.value : 0),
+    new BigNumber(0)
+  );
+  return new BigNumber(transaction.in_message.value !== null ? transaction.in_message.value : 0).minus(outgoing);
 };
 
 const findAddress = (transaction: any) => {

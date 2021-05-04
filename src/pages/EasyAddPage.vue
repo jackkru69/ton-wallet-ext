@@ -1,5 +1,5 @@
-<template>
-  <div class="v-create-wallet-page py-8">
+<template >
+  <div v-if="accountsCount === 0" class="v-create-wallet-page py-8">
     <Inner>
       <VForm
         ref="form"
