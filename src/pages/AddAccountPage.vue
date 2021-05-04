@@ -9,6 +9,7 @@
       >
         <h1 class="mb-8">Add wallet</h1>
         <VTextField
+          dense
           class="mb-4"
           v-model="name"
           clearable
@@ -17,6 +18,7 @@
           :rules="[(v) => !!v || 'Name is required']"
         ></VTextField>
         <VSelect
+          dense
           class="mb-4"
           v-model="walletType"
           :items="walletsTypes"
@@ -24,6 +26,7 @@
           outlined
         ></VSelect>
         <VSelect
+          dense
           class="mb-4"
           v-model="seedPhraseWorldCount"
           :items="[12, 24]"
@@ -34,6 +37,7 @@
           ]"
         ></VSelect>
         <VTextField
+          dense
           class="mb-4"
           v-model.trim="seedPhrase"
           outlined
@@ -41,15 +45,12 @@
           readonly
         >
           <template v-slot:append>
-            <VBtn @click="generatePhrase" height="28" class="mr-3">
-              Generate
-            </VBtn>
-            <VBtn v-clipboard="() => seedPhrase" height="28" color="primary">
-              Copy
-            </VBtn>
+            <VBtn @click="generatePhrase" class="mr-3"> Generate </VBtn>
+            <VBtn v-clipboard="() => seedPhrase" color="primary"> Copy </VBtn>
           </template></VTextField
         >
         <VTextField
+          dense
           v-if="accountsCount === 0"
           class="mb-4"
           v-model.trim="password"
@@ -60,6 +61,7 @@
           :error-messages="passwordErrors"
         ></VTextField>
         <VTextField
+          dense
           v-if="accountsCount === 0"
           class="mb-4"
           v-model.trim="confirmPassword"
@@ -73,6 +75,7 @@
         ></VTextField>
         <h2 class="mb-4">Custodians: {{ custodians.length }}</h2>
         <VTextField
+          dense
           v-for="(custodian, index) in custodians"
           :key="index"
           class="mb-4"
@@ -82,12 +85,7 @@
           :rules="[(v) => !!`${v}` || 'Custodian is required']"
         >
           <template v-slot:append>
-            <VBtn
-              v-clipboard="() => custodian"
-              height="22"
-              color="primary"
-              class="mr-1"
-            >
+            <VBtn v-clipboard="() => custodian" color="primary" class="mr-1">
               Copy
             </VBtn>
             <VBtn
@@ -95,7 +93,6 @@
               v-if="index !== 0"
               plain
               icon
-              height="22"
               color="red"
             >
               <VIcon>mdi-minus</VIcon>
@@ -105,7 +102,6 @@
               @click="addNewField(custodians.length)"
               plain
               icon
-              height="22"
               color="green"
             >
               <VIcon>mdi-plus</VIcon>

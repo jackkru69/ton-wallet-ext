@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar class="v-app-bar" app :height="72" flat>
+  <v-app-bar :height="90" class="v-app-bar" app flat>
     <RouterLink to="/">
       <img class="v-app-bar__logo mr-4" src="@/assets/img/freeton.png" alt="" />
     </RouterLink>
@@ -13,6 +13,10 @@
       dense
       outlined
       class="v-app-bar__select"
+      :height="30"
+      background-color="#FFFFFF"
+      :light="true"
+      :menu-props="{ light: true }"
     />
     <VMenu
       bottom

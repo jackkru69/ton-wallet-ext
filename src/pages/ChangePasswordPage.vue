@@ -54,7 +54,6 @@
 <script lang="ts">
 import { Component, Vue, Watch } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
-import { VCard, VIcon, VTextField, VSelect, VForm, VBtn } from "vuetify/lib";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { isEmpty } from "lodash";
@@ -75,7 +74,7 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Inner, VCard, VIcon, VTextField, VSelect, VForm, VBtn },
+  components: { Inner },
 })
 export default class ChangePasswordPage extends Mappers {
   valid = true;
