@@ -88,17 +88,14 @@
 
   <script lang="ts">
 import { tonService } from "@/background";
-import { browserVuexLocalStorage } from "@/store";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
 import { networksModuleMapper } from "@/store/modules/networks";
 
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
-import { Promise } from "core-js";
-import { concat } from "core-js/core/array";
+
 import { isEmpty } from "lodash";
-import { resolve } from "node:dns";
 import { Component, Inject, Vue } from "vue-property-decorator";
 
 const Mappers = Vue.extend({
@@ -117,7 +114,7 @@ const Mappers = Vue.extend({
   },
   computed: {
     ...walletModuleMapper.mapGetters([
-      "activeNetworkID",
+      "activeNetworkServer",
       "activeAccountAddress",
       "isStoreRestored",
     ]),
@@ -125,9 +122,9 @@ const Mappers = Vue.extend({
     ...networksModuleMapper.mapGetters(["networksForSelect"]),
     modelNetwork: {
       get() {
-        return this.activeNetworkID;
+        return this.activeNetworkServer;
       },
-      set(value: number) {
+      set(value: string) {
         this.setNetwork(value);
       },
     },
@@ -160,12 +157,12 @@ export default class Header extends Mappers {
         seedPhrase?.phrase,
         12
       );
-      const { activeNetworkID, accountsCount } = this;
+      const { activeNetworkServer, accountsCount } = this;
       await this.addAccount({
         keypair,
         custodians: [`0x${keypair.public}`],
         walletType: "safe-multisig",
-        network: activeNetworkID,
+        networkServer: activeNetworkServer,
         name: `Account ${accountsCount + 1}`,
         client: tonService.client,
         password: result.password,
@@ -175,6 +172,7 @@ export default class Header extends Mappers {
       if (this.$route.path !== "/") this.$router.push("/");
     });
   }
+
   onClickResetWallet() {
     this.showTypePasswordModal().then(() => {
       this.deleteAllAccounts();

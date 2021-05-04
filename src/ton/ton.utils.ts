@@ -1,10 +1,19 @@
 import { KeyPair, ResultOfMnemonicFromRandom, SortDirection, TonClient } from "@tonclient/core";
 import giverPackage from "./giver.package";
 import Transfer from "@/contracts/Transfer";
-import { TxType } from "@/store/modules/accounts";
+import { BigNumber } from "bignumber.js";
+import { sliceString, baseToAssetAmount } from "../utils/index";
+import { TxPendingType, TxType } from "@/types/transactions";
+import naclUtil from "tweetnacl-util";
+import { contracts } from "../store/modules/accounts";
 
 export const SEED_PHRASE_DICTIONARY_ENGLISH = 1;
 export const HD_PATH = "m/44'/396'/0'/0/0";
+
+const convert = (from: any, to: any) => (str: any) => Buffer.from(str, from).toString(to);
+
+export const utf8ToHex = convert("utf8", "hex");
+export const hexToUtf8 = convert("hex", "utf8");
 
 export async function generateSeed(
   client: TonClient,
@@ -85,26 +94,6 @@ export async function getBalance(client: TonClient, address: string) {
   return result[0].balance;
 }
 
-export async function subscribeAccount(
-  client: TonClient,
-  address: string,
-  cb: (v: any) => any,
-  result = "id balance(format:DEC)"
-) {
-  return await client.net.subscribe_collection(
-    {
-      collection: "accounts",
-      filter: {
-        id: {
-          eq: address,
-        },
-      },
-      result,
-    },
-    cb
-  );
-}
-
 export async function getAccountTxs(client: TonClient, address: string) {
   if (!address) throw new Error("address not specified");
   const { result } = await client.net.query_collection({
@@ -164,5 +153,41 @@ export async function checkDeployStatus(client: TonClient, address: string, stat
   });
   if (result[0]) {
     return statuses.includes(result[0].acc_type);
-  } else return false;
+  } else return undefined;
 }
+
+export function getExplorerLink(explorer: string, address: string) {
+  return `${explorer}/accounts/accountDetails?id=${address}`;
+}
+
+const findValue = (transaction: any) => {
+  const outgoing = transaction.out_messages.reduce((total: any, msg: any) => total.plus(msg.value), new BigNumber(0));
+  return new BigNumber(transaction.in_message.value || 0).minus(outgoing);
+};
+
+const findAddress = (transaction: any) => {
+  if (transaction.out_messages.length > 0) {
+    for (const item of transaction.out_messages) {
+      if (item.dst != null) {
+        return item.dst;
+      }
+    }
+    return undefined;
+  } else if (transaction.in_message.src != null) {
+    return transaction.in_message.src;
+  } else {
+    return transaction.in_message.dst;
+  }
+};
+
+export const formatTx = (tx: TxType) => {
+  const value = findValue(tx);
+  const address = findAddress(tx);
+  return {
+    ...tx,
+    fId: sliceString(tx.id),
+    type: value.isLessThan(0) ? "minus" : "plus",
+    address: sliceString(address),
+    fValue: baseToAssetAmount(value.toString(), "TON", 3),
+  };
+};

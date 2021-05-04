@@ -53,7 +53,12 @@
             <VListItem @click="isAccountDetailsModalOpen = true">
               <VListItemTitle>account details</VListItemTitle>
             </VListItem>
-            <VListItem link>
+            <VListItem
+              v-if="activeNetworkServer !== 'http://0.0.0.0'"
+              link
+              :href="explorerLink"
+              target="_blank"
+            >
               <VListItemTitle>explorer</VListItemTitle>
             </VListItem>
             <VListItem @click="onClickDeleteAccount">
@@ -65,13 +70,7 @@
       <v-divider></v-divider>
       <div class="d-flex justify-center my-4">
         <h1>
-          {{
-            account &&
-            account.tokens.length &&
-            baseToAssetAmount(account.tokens[0].balance, "TON", 3) +
-              " " +
-              account.tokens[0].symbol
-          }}
+          {{ baseToAssetAmount(balance, "TON", 3) + " " + "TON" }}
         </h1>
       </div>
       <div class="d-flex justify-center my-4">
@@ -81,14 +80,38 @@
       </div>
       <div class="d-flex justify-center align center">
         <VBtn
-          v-if="activeNetworkID === 0"
+          v-if="activeNetworkServer === 'http://0.0.0.0'"
           :loading="isAirdropPending"
           @click="airdrop"
           class="mr-4"
           icon
           ><VIcon>mdi-water</VIcon></VBtn
         >
-        <VBtn @click="transfer" icon><VIcon :width="40">mdi-send</VIcon></VBtn>
+        <VTooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <VBtn
+              class="mr-4"
+              @click="transferOrConfirm('confirm')"
+              v-on="on"
+              v-bind="attrs"
+              icon
+              ><VIcon :width="40">mdi-draw</VIcon></VBtn
+            >
+          </template>
+          <span>Confirm transaction</span>
+        </VTooltip>
+        <VTooltip bottom>
+          <template v-slot:activator="{ on, attrs }">
+            <VBtn
+              @click="transferOrConfirm('transfer')"
+              v-on="on"
+              v-bind="attrs"
+              icon
+              ><VIcon :width="40">mdi-send</VIcon></VBtn
+            >
+          </template>
+          <span>Create transfer</span>
+        </VTooltip>
       </div>
 
       <VTabs grow v-model="tab" class="my-8">
@@ -99,7 +122,12 @@
       </VTabs>
       <VTabsItems v-model="tab">
         <VTabItem key="txs">
-          <VDataTable :headers="headersTxs" :items="txs" :items-per-page="5">
+          <VDataTable
+            :loading="isTxsPendins"
+            :headers="headersTxs"
+            :items="formattedTxs"
+            :items-per-page="5"
+          >
             <template v-slot:[`item.type`]="{ item }">
               <VChip w :color="item.type === 'minus' ? 'red' : 'green'">
                 {{ item.type === "plus" ? "IN" : "OUT" }}
@@ -107,17 +135,17 @@
             </template></VDataTable
           >
         </VTabItem>
-        <VTabItem key="tokens">
+        <!-- <VTabItem key="tokens">
           <VDataTable :headers="[]" :items="[]" :items-per-page="5">
           </VDataTable>
-        </VTabItem>
+        </VTabItem> -->
       </VTabsItems>
     </Inner>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Inject, Vue } from "vue-property-decorator";
+import { Component, Inject, Vue, Watch } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import DeployModal from "@/components/modals/DeployModal.vue";
 import CustodiansModal from "@/components/modals/CustodiansModal.vue";
@@ -129,38 +157,42 @@ import {
 
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { baseToAssetAmount, sliceString } from "@/utils";
-import { sendGrams } from "@/ton/ton.utils";
+import {
+  formatTx,
+  getAccountTxs,
+  getExplorerLink,
+  sendGrams,
+} from "@/ton/ton.utils";
 import { tonService } from "@/background";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
 import AccountDetailsModal from "@/components/modals/AccountDetailsModal.vue";
 import InsufficientFundsModal from "@/components/modals/InsufficientFundsModal.vue";
 import BigNumber from "bignumber.js";
+import { TxType } from "@/types/transactions";
+import { networksModuleMapper } from "@/store/modules/networks";
 
 const Mappers = Vue.extend({
   computed: {
     ...walletModuleMapper.mapGetters([
       "activeAccountAddress",
-      "activeNetworkID",
+      "activeNetworkServer",
       "isStoreRestored",
     ]),
     ...accountsModuleMapper.mapGetters([
       "getAccountByAddress",
-      "getFormattedTxsByAddress",
-      "getFormattedPendingTxsByAddress",
       "accountsCount",
       "accounts",
+      "getTokenBySymbol",
     ]),
+    ...networksModuleMapper.mapGetters(["getNetworkByServer"]),
     ...keystoreModuleMapper.mapGetters(["getPublicKeyData"]),
   },
   methods: {
-    ...accountsModuleMapper.mapActions(["updateBalanceByAddress", "deploy"]),
-    ...accountsModuleMapper.mapMutations([
-      "setTransactions",
-      "deleteAccount",
-      "setPendingTransactions",
-    ]),
+    ...accountsModuleMapper.mapActions(["updateBalanceByAddress"]),
+    ...accountsModuleMapper.mapMutations(["deleteAccount"]),
     ...walletModuleMapper.mapMutations(["setActiveAccountAddress"]),
     ...keystoreModuleMapper.mapActions(["removeKey"]),
+    getExplorerLink,
   },
 });
 
@@ -175,12 +207,18 @@ const Mappers = Vue.extend({
   methods: { sliceString, baseToAssetAmount },
 })
 export default class MainPage extends Mappers {
+  isMounted = false;
+
   isAirdropPending = false;
+  isTxsPendins = true;
+
   isCustodiansModalOpen = false;
   isAccountDetailsModalOpen = false;
   isInsufficientFundsModalOpen = false;
 
   @Inject() showTypePasswordModal!: any;
+
+  txs: TxType[] = [];
 
   tab = "txs";
 
@@ -189,7 +227,7 @@ export default class MainPage extends Mappers {
       title: "Transactions",
       tab: "txs",
     },
-    { title: "Tokens", tab: "tokens" },
+    // { title: "Tokens", tab: "tokens" },
   ];
 
   headersTxs = [
@@ -224,20 +262,49 @@ export default class MainPage extends Mappers {
     return this.getAccountByAddress(this.activeAccountAddress);
   }
 
-  public get txs(): any[] | undefined {
-    return this.getFormattedTxsByAddress(this.activeAccountAddress, "TON");
-  }
-
-  public get pendingTxs(): any[] | undefined {
-    return this.getFormattedPendingTxsByAddress(
-      this.activeAccountAddress,
-      "TON"
-    );
+  public get formattedTxs(): any[] {
+    return this.txs.map(formatTx);
   }
 
   public get accountAndNetwork() {
-    const { activeAccountAddress, activeNetworkID } = this;
-    return { activeAccountAddress, activeNetworkID };
+    const { activeAccountAddress, activeNetworkServer } = this;
+    return { activeAccountAddress, activeNetworkServer };
+  }
+
+  async fetchTxs() {
+    if (this.activeAccountAddress) {
+      try {
+        this.isTxsPendins = true;
+        const response = await getAccountTxs(
+          tonService.client,
+          this.activeAccountAddress
+        );
+        this.txs = response;
+        this.isTxsPendins = false;
+      } catch (error) {
+        this.isTxsPendins = false;
+      }
+    }
+  }
+  @Watch("accountAndNetwork")
+  async onChangeFields() {
+    if (this.isMounted) {
+      this.fetchTxs();
+    }
+  }
+
+  public get explorerLink(): string {
+    if (this.activeAccountAddress) {
+      const network = this.getNetworkByServer(this.activeNetworkServer);
+      if (network) {
+        const link = this.getExplorerLink(
+          network.explorer,
+          this.activeAccountAddress
+        );
+        return link;
+      }
+    }
+    return "";
   }
 
   async airdrop() {
@@ -257,14 +324,19 @@ export default class MainPage extends Mappers {
     }
   }
 
-  transfer() {
+  transferOrConfirm(action: string) {
     if (this.account) {
       const isBalanceGreaterThanZero = new BigNumber(
-        this.account.tokens[0].balance
+        this.balance
       ).isGreaterThan(0);
       if (isBalanceGreaterThanZero) {
-        if (this.account.networks.includes(this.activeNetworkID)) {
-          this.$router.push("/transfer");
+        if (this.account.networks.includes(this.activeNetworkServer)) {
+          if (action === "confirm") {
+            this.$router.push("/confirm-transaction");
+          }
+          if (action === "transfer") {
+            this.$router.push("/transfer");
+          }
         } else {
           this.showTypePasswordModal(this.activeAccountAddress).then(
             async (result: any) => {
@@ -295,6 +367,26 @@ export default class MainPage extends Mappers {
         if (address) this.setActiveAccountAddress(address);
       }
     }
+  }
+
+  public get balance(): string {
+    if (this.activeAccountAddress) {
+      const token = this.getTokenBySymbol(this.activeAccountAddress, "TON");
+      if (token) {
+        return token.balance;
+      }
+    }
+    return "";
+  }
+
+  @Watch("balance")
+  onChangeBalance() {
+    this.fetchTxs();
+  }
+
+  async mounted() {
+    this.fetchTxs();
+    this.isMounted = true;
   }
 }
 </script>

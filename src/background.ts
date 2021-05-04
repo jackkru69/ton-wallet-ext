@@ -1,7 +1,6 @@
 import { store } from "./store/index";
 import { TonService } from "@/ton/ton.service";
-import TonContract from "./ton/ton.contract";
-import { contracts } from "./store/modules/accounts";
+
 // @ts-ignore
 browser.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
@@ -13,18 +12,17 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 export const tonService = new TonService();
 
 (store as any).restored.then(() => {
-  const network = store.getters["networks/getNetworkById"](store.state.wallet.activeNetworkID);
-
+  const server = store.state.wallet.activeNetworkServer;
   store.commit("wallet/setIsStoreRestored", true);
-  tonService.setNetwork(network.server);
+  tonService.setNetwork(server);
   console.log("background.js/store", store);
   console.log("background.js/tonService", tonService);
 });
 
 store.subscribe((mutation) => {
   if (mutation.type === "wallet/setNetwork") {
-    const network = store.getters["networks/getNetworkById"](mutation.payload);
-    tonService.setNetwork(network.server);
+    const server = store.state.wallet.activeNetworkServer;
+    tonService.setNetwork(server);
   }
 });
 // @ts-ignore

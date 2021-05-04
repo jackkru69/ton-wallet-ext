@@ -5,16 +5,11 @@ import SafeMultisig from "@/contracts/SafeMultisigWallet";
 import SetCodeMultisig from "@/contracts/SetCodeMultisigWallet";
 import SetCodeMultisig2 from "@/contracts/SetCodeMultisigWallet2";
 import { getBalance } from "@/ton/ton.utils";
-import {
-  baseToAssetAmount,
-  findAccByAddressAndReturnIndex,
-  findTokenBySymbolAndReturnIndex,
-  sliceString,
-} from "../../utils/index";
+import { findAccByAddressAndReturnIndex, findTokenBySymbolAndReturnIndex } from "../../utils/index";
 import Vue from "vue";
 import { Store } from "vuex";
-import { BigNumber } from "bignumber.js";
 import Transfer from "@/contracts/Transfer";
+
 export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
 
 export const walletsTypes = [
@@ -36,7 +31,7 @@ export const walletsTypes = [
   },
 ];
 
-export const contracts = {
+export const contracts: any = {
   // original: null,
   "safe-multisig": SafeMultisig,
   "set-code-multisig": SetCodeMultisig,
@@ -48,104 +43,21 @@ export type TokenType = {
   symbol: string;
   balance: string;
   decimals: number;
-  transactions: any[];
-  pendingTransactions: any[];
 };
 export interface AccountInterface {
   address: string;
   walletType: WalletType;
   name: string;
   custodians: string[];
+  publicKey: string;
   tokens: TokenType[];
-  networks: Array<number | null>;
+  networks: string[];
   isExist: boolean;
   isRestoredWithKeyPair: boolean;
 }
-
-export type TxType = {
-  account_addr: string;
-  balance_delta: string;
-  id: string;
-  in_message: {
-    dst: string;
-    id: string;
-    msg_type_name: string;
-    src: string;
-    body: string;
-    status_name: string;
-    value: string;
-  };
-  out_messages: {
-    dst: string;
-    id: string;
-    msg_type_name: string;
-    src: string;
-    body: string;
-    status_name: string;
-    value: string;
-  }[];
-  comment: string;
-  now: number;
-  status_name: string;
-  tr_type_name: string;
-};
-
-export type TxPendingType = {
-  bounce: boolean;
-  confirmationsMask: string;
-  creator: string;
-  dest: string;
-  id: string;
-  index: string;
-  payload: string;
-  sendFlags: string;
-  signsReceived: string;
-  signsRequired: string;
-  value: string;
-};
-
 class AccountsState {
   accounts: AccountInterface[] = [];
 }
-
-const findValue = (transaction: any) => {
-  const outgoing = transaction.out_messages.reduce((total: any, msg: any) => total.plus(msg.value), new BigNumber(0));
-  return new BigNumber(transaction.in_message.value || 0).minus(outgoing);
-};
-
-const findAddress = (transaction: any) => {
-  if (transaction.out_messages.length > 0) {
-    for (const item of transaction.out_messages) {
-      if (item.dst != null) {
-        return item.dst;
-      }
-    }
-    return undefined;
-  } else if (transaction.in_message.src != null) {
-    return transaction.in_message.src;
-  } else {
-    return transaction.in_message.dst;
-  }
-};
-
-const formatTx = (tx: TxType) => {
-  const value = findValue(tx);
-  const address = findAddress(tx);
-  return {
-    ...tx,
-    fId: sliceString(tx.id),
-    type: value.isLessThan(0) ? "minus" : "plus",
-    address: sliceString(address),
-    fValue: baseToAssetAmount(value.toString(), "TON", 3),
-  };
-};
-
-const formatPendingTx = (tx: TxPendingType) => {
-  return {
-    ...tx,
-    fId: sliceString(tx.id),
-  };
-};
 
 class AccountsGetters extends Getters<AccountsState> {
   public get getAccountByAddress(): (address: string | undefined) => AccountInterface | undefined {
@@ -158,19 +70,6 @@ class AccountsGetters extends Getters<AccountsState> {
       const tokenIndex = findTokenBySymbolAndReturnIndex(this.state.accounts[accountIndex].tokens, symbol);
       return this.state.accounts[accountIndex].tokens[tokenIndex];
     };
-  }
-
-  public get getFormattedTxsByAddress(): (address: string | undefined, symbol: string) => any {
-    return (address, tokenId) =>
-      this.getters.getTokenBySymbol(address, tokenId)?.transactions.map((tx) => formatTx(tx));
-  }
-
-  public get getFormattedPendingTxsByAddress(): (
-    address: string | undefined,
-    symbol: string
-  ) => TxPendingType[] | undefined {
-    return (address, tokenId) =>
-      this.getters.getTokenBySymbol(address, tokenId)?.pendingTransactions.map((tx) => formatPendingTx(tx));
   }
 
   public get accounts(): AccountInterface[] {
@@ -208,31 +107,11 @@ class AccountsMutations extends Mutations<AccountsState> {
     this.state.accounts[accountIndex].tokens[tokenIndex].balance = newBalance;
   }
 
-  addNetworkToAccount({ address, networkId }: { address: string | undefined; networkId: number }) {
+  addNetworkToAccount({ address, networkServer }: { address: string | undefined; networkServer: string }) {
     const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
-    if (!this.state.accounts[accountIndex].networks.includes(networkId)) {
-      this.state.accounts[accountIndex].networks.push(networkId);
+    if (!this.state.accounts[accountIndex].networks.includes(networkServer)) {
+      this.state.accounts[accountIndex].networks.push(networkServer);
     }
-  }
-
-  setTransactions({ address, symbol, transactions }: { address: string; symbol: string; transactions: any[] }) {
-    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
-    const tokenIndex = findTokenBySymbolAndReturnIndex(this.state.accounts[accountIndex].tokens, symbol);
-    this.state.accounts[accountIndex].tokens[tokenIndex].transactions = transactions;
-  }
-
-  setPendingTransactions({
-    address,
-    symbol,
-    pendingTransactions,
-  }: {
-    address: string | undefined;
-    symbol: string;
-    pendingTransactions: any[];
-  }) {
-    const accountIndex = findAccByAddressAndReturnIndex(this.state.accounts, address);
-    const tokenIndex = findTokenBySymbolAndReturnIndex(this.state.accounts[accountIndex].tokens, symbol);
-    this.state.accounts[accountIndex].tokens[tokenIndex].pendingTransactions = pendingTransactions;
   }
 
   deleteAccount(address: string | undefined) {
@@ -266,7 +145,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     keypair,
     walletType,
     name,
-    network,
+    networkServer,
     client,
     isDeployed,
     seedPhrase,
@@ -277,7 +156,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
     keypair: KeyPair;
     walletType: WalletType;
     name: string;
-    network: number | null;
+    networkServer: string;
     client: TonClient;
     seedPhrase?: string;
     isDeployed?: boolean;
@@ -303,7 +182,8 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
       walletType: walletType,
       name: name,
       custodians,
-      networks: isDeployed ? [network] : [],
+      publicKey: keypair.public,
+      networks: isDeployed ? [networkServer] : [],
       isExist: !!isDeployed,
       isRestoredWithKeyPair,
       tokens: [
@@ -312,8 +192,6 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
           symbol: "TON",
           balance: "0",
           decimals: 10,
-          transactions: [],
-          pendingTransactions: [],
         },
       ],
     };
@@ -352,12 +230,12 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
   public async deploy({
     address,
     client,
-    networkId,
+    networkServer,
     keypair,
   }: {
     address: string | undefined;
     symbol: string;
-    networkId: number;
+    networkServer: string;
     keypair: KeyPair;
     client: TonClient;
   }) {
@@ -369,6 +247,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         name: account.walletType,
         keys: keypair,
       });
+      console.log("walletType", account.walletType);
       const custodians = account.custodians;
       await contract.deploy({
         input: {
@@ -376,7 +255,7 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
           reqConfirms: custodians.length,
         },
       });
-      this.mutations.addNetworkToAccount({ address, networkId });
+      this.mutations.addNetworkToAccount({ address, networkServer });
     }
   }
 
@@ -429,14 +308,6 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
             allBalance: false,
             payload: body,
           },
-        });
-        const response = await contract.run({
-          functionName: "getTransactions",
-        });
-        this.mutations.setPendingTransactions({
-          address: addressFrom,
-          symbol: "TON",
-          pendingTransactions: response.value.transactions,
         });
       } else {
         await contract.call({

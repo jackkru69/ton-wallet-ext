@@ -146,7 +146,7 @@ import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
 
 const Mappers = Vue.extend({
   computed: {
-    ...walletModuleMapper.mapGetters(["activeNetworkID"]),
+    ...walletModuleMapper.mapGetters(["activeNetworkServer"]),
     ...accountsModuleMapper.mapGetters([
       "getAccountByAddress",
       "accountsCount",
@@ -223,7 +223,7 @@ export default class CreateWalletPage extends Mappers {
   async onSubmit() {
     const {
       walletType,
-      activeNetworkID,
+      activeNetworkServer,
       name,
       custodians,
       keypair,
@@ -235,7 +235,7 @@ export default class CreateWalletPage extends Mappers {
         keypair,
         custodians,
         walletType,
-        network: activeNetworkID,
+        networkServer: activeNetworkServer,
         name,
         client: tonService.client,
         password,
@@ -249,7 +249,7 @@ export default class CreateWalletPage extends Mappers {
           keypair,
           custodians,
           walletType,
-          network: activeNetworkID,
+          networkServer: activeNetworkServer,
           name,
           client: tonService.client,
           password: result.password,

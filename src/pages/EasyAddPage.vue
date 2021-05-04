@@ -55,7 +55,7 @@ import { isEmpty } from "lodash";
 
 const Mappers = Vue.extend({
   computed: {
-    ...walletModuleMapper.mapGetters(["activeNetworkID"]),
+    ...walletModuleMapper.mapGetters(["activeNetworkServer"]),
     ...accountsModuleMapper.mapGetters([
       "getAccountByAddress",
       "accountsCount",
@@ -83,12 +83,12 @@ export default class CreateWalletPage extends Mappers {
       seedPhrase?.phrase,
       12
     );
-    const { activeNetworkID, accountsCount, password } = this;
+    const { activeNetworkServer, accountsCount, password } = this;
     await this.addAccount({
       keypair,
       custodians: [`0x${keypair.public}`],
       walletType: "safe-multisig",
-      network: activeNetworkID,
+      networkServer: activeNetworkServer,
       name: `Account ${accountsCount + 1}`,
       client: tonService.client,
       password: password,

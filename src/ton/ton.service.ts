@@ -7,15 +7,15 @@ export class TonService {
 
   static instance: TonService;
 
-  constructor(network = "http://0.0.0.0") {
+  constructor() {
     if (TonService.instance) return TonService.instance;
     TonClient.useBinaryLibrary(libWeb);
-    this.network = network;
-    this.client = new TonClient({
-      network: {
-        server_address: network,
-      },
-    });
+    // this.network = network;
+    // this.client = new TonClient({
+    //   network: {
+    //     server_address: network,
+    //   },
+    // });
 
     TonService.instance = this;
   }

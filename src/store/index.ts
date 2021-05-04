@@ -66,7 +66,6 @@ export const store = createStore(root, {
         "wallet/setActiveAccountAddress",
         "wallet/setIsStoreRestored",
         "wallet/setNetwork",
-        "wallet/setSubscriptionBalanceHandle",
       ],
     }),
     vuexLocal.plugin,

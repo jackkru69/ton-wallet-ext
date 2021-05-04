@@ -1,14 +1,13 @@
 import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-module";
 import { Store } from "vuex";
+import { defaultNetworks } from "./networks";
 
 export type Network = "http://0.0.0.0" | "http://net.ton.dev" | "http://main.ton.dev";
 const timeout = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 class WalletState {
   isStoreRestored = false;
-  activeNetworkID = 0;
+  activeNetworkServer = defaultNetworks[0].server;
   activeAccountAddress: string | undefined = undefined;
-  subscriptionBalanceHandle: number | null = null;
-  subscriptionTxsHandle: number | null = null;
 }
 
 class WalletGetters extends Getters<WalletState> {
@@ -16,20 +15,12 @@ class WalletGetters extends Getters<WalletState> {
     return this.state.isStoreRestored;
   }
 
-  public get activeNetworkID() {
-    return this.state.activeNetworkID;
+  public get activeNetworkServer() {
+    return this.state.activeNetworkServer;
   }
 
   public get activeAccountAddress() {
     return this.state.activeAccountAddress;
-  }
-
-  public get subscriptionBalanceHandle(): number | null {
-    return this.state.subscriptionBalanceHandle;
-  }
-
-  public get subscriptionTxsHandle(): number | null {
-    return this.state.subscriptionTxsHandle;
   }
 }
 
@@ -38,16 +29,12 @@ class WalletMutations extends Mutations<WalletState> {
     this.state.isStoreRestored = payload;
   }
 
-  setNetwork(payload: number) {
-    this.state.activeNetworkID = payload;
+  setNetwork(payload: string) {
+    this.state.activeNetworkServer = payload;
   }
 
   setActiveAccountAddress(address: string | undefined) {
     this.state.activeAccountAddress = address;
-  }
-
-  setSubscriptionBalanceHandle(payload: number | null) {
-    this.state.subscriptionBalanceHandle = payload;
   }
 }
 
@@ -57,6 +44,7 @@ class WalletActions extends Actions<WalletState, WalletGetters, WalletMutations,
   $init(store: Store<any>): void {
     this.store = store;
   }
+
   async isLoggedIn() {
     const accountsCount = await this.store.getters["accounts/accountsCount"];
     return accountsCount > 0;

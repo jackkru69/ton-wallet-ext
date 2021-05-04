@@ -55,16 +55,14 @@
 import { Component, Vue, Watch } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import { VCard, VIcon, VTextField, VSelect, VForm, VBtn } from "vuetify/lib";
-import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
-import { tonService } from "@/background";
 import { isEmpty } from "lodash";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
 
 const Mappers = Vue.extend({
   computed: {
-    ...walletModuleMapper.mapGetters(["activeNetworkID"]),
+    ...walletModuleMapper.mapGetters(["activeNetworkServer"]),
     ...accountsModuleMapper.mapGetters([
       "getAccountByAddress",
       "accountsCount",

@@ -30,7 +30,7 @@ const Mappers = Vue.extend({
   computed: {
     ...walletModuleMapper.mapGetters([
       "activeAccountAddress",
-      "activeNetworkID",
+      "activeNetworkServer",
     ]),
   },
   methods: {
@@ -59,7 +59,7 @@ export default class DeployModal extends Mappers {
             address: this.activeAccountAddress,
             client: tonService.client,
             symbol: "TON",
-            networkId: this.activeNetworkID,
+            networkServer: this.activeNetworkServer,
             keypair: result.keypair,
           });
           this.isPending = false;

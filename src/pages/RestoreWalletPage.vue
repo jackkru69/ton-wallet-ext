@@ -148,7 +148,7 @@
           label="Confirm password"
         ></VTextField>
         <div class="d-flex justify-end">
-          <VBtn to="/initialize" class="mr-4"> Back </VBtn>
+          <VBtn link to="/initialize" class="mr-4"> Back </VBtn>
           <VBtn
             color="primary"
             type="submit"
@@ -187,7 +187,7 @@ const Mappers = Vue.extend({
   computed: {
     ...walletModuleMapper.mapGetters([
       "activeAccountAddress",
-      "activeNetworkID",
+      "activeNetworkServer",
     ]),
     ...accountsModuleMapper.mapGetters(["accountsCount"]),
   },
@@ -234,14 +234,14 @@ export default class RestoreWalletPage extends Mappers {
     const {
       seedPhrase,
       walletType,
-      activeNetworkID,
+      activeNetworkServer,
       publicKey,
       secretKey,
     } = this;
     return {
       seedPhrase,
       walletType,
-      activeNetworkID,
+      activeNetworkServer,
       publicKey,
       secretKey,
     };
@@ -349,7 +349,7 @@ export default class RestoreWalletPage extends Mappers {
   async onSubmit() {
     const {
       walletType,
-      activeNetworkID,
+      activeNetworkServer,
       name,
       getKeypair,
       custodians,
@@ -364,7 +364,7 @@ export default class RestoreWalletPage extends Mappers {
           keypair,
           custodians,
           walletType,
-          network: activeNetworkID,
+          networkServer: activeNetworkServer,
           name,
           client: tonService.client,
           isDeployed,
@@ -380,7 +380,7 @@ export default class RestoreWalletPage extends Mappers {
             keypair,
             custodians,
             walletType,
-            network: activeNetworkID,
+            networkServer: activeNetworkServer,
             name,
             client: tonService.client,
             isDeployed,
@@ -402,7 +402,7 @@ export default class RestoreWalletPage extends Mappers {
           keypair,
           custodians,
           walletType,
-          network: activeNetworkID,
+          networkServer: activeNetworkServer,
           name,
           client: tonService.client,
           isDeployed,
@@ -418,7 +418,7 @@ export default class RestoreWalletPage extends Mappers {
             keypair,
             custodians,
             walletType,
-            network: activeNetworkID,
+            networkServer: activeNetworkServer,
             name,
             client: tonService.client,
             isDeployed,
