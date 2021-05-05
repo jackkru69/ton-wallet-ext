@@ -1,5 +1,5 @@
 <template>
-  <div class="transfer-page py-8">
+  <div class="transfer-page pb-8">
     <Inner>
       <VForm
         ref="form"
@@ -7,9 +7,10 @@
         lazy-validation
         @submit.prevent="onSubmit"
       >
-        <h1 class="mb-8">Create transfer</h1>
+        <h1 class="mb-5">Create transfer</h1>
         <VTextField
-          class="mb-4"
+          autocomplete="off"
+          dense
           v-model="address"
           clearable
           outlined
@@ -18,7 +19,8 @@
         ></VTextField>
 
         <VTextField
-          class="mb-4"
+          autocomplete="off"
+          dense
           v-model.trim="amount"
           clearable
           outlined
@@ -27,7 +29,9 @@
         ></VTextField>
 
         <VTextField
-          class="mb-4"
+          autocomplete="off"
+          dense
+          class="mb-5"
           v-model.trim="message"
           outlined
           hide-details
@@ -35,8 +39,10 @@
         ></VTextField>
 
         <div class="d-flex justify-end">
-          <VBtn to="/" class="mr-4"> Back </VBtn>
+          <VBtn x-small width="80" to="/" class="mr-4"> Back </VBtn>
           <VBtn
+            x-small
+            width="80"
             :loading="isPending"
             color="primary"
             type="submit"

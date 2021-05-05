@@ -1,5 +1,5 @@
 <template>
-  <div class="v-restore-wallet-page py-8">
+  <div class="v-restore-wallet-page pb-8">
     <TypePasswordModal ref="typePasswordModalRestoreWallet" />
 
     <Inner>
@@ -9,9 +9,10 @@
         lazy-validation
         @submit.prevent="onSubmit"
       >
-        <h1 class="mb-8">Restore wallet</h1>
+        <h1 class="mb-5">Restore wallet</h1>
         <VTextField
-          class="mb-4"
+          autocomplete="off"
+          dense
           v-model="name"
           clearable
           outlined
@@ -19,14 +20,15 @@
           :rules="[(v) => !!v || 'Name is required']"
         ></VTextField>
         <VSelect
-          class="mb-4"
+          dense
           v-model="walletType"
           :items="walletsTypes"
           label="Wallet type"
           outlined
+          :menu-props="{ 'offset-y': true }"
         ></VSelect>
         <VSelect
-          class="mb-4"
+          dense
           v-model="restoryType"
           :items="[
             {
@@ -40,9 +42,11 @@
           ]"
           label="Restory type"
           outlined
+          :menu-props="{ 'offset-y': true }"
         ></VSelect>
         <VTextField
-          class="mb-4"
+          autocomplete="off"
+          dense
           v-if="restoryType === 'seedPhrase'"
           v-model.trim="seedPhrase"
           outlined
@@ -54,8 +58,9 @@
           :success-messages="seedPhraseTips"
         ></VTextField>
         <VTextField
+          autocomplete="off"
+          dense
           v-if="restoryType === 'keypair'"
-          class="mb-4"
           v-model.trim="publicKey"
           outlined
           label="Public key"
@@ -66,8 +71,9 @@
           :success-messages="seedPhraseTips"
         ></VTextField>
         <VTextField
+          autocomplete="off"
+          dense
           v-if="restoryType === 'keypair'"
-          class="mb-4"
           v-model.trim="secretKey"
           outlined
           label="Secret key"
@@ -85,9 +91,10 @@
           "
         >
           <VTextField
+            autocomplete="off"
+            dense
             v-for="(custodian, index) in custodians"
             :key="index"
-            class="mb-4"
             v-model.trim="custodians[index]"
             outlined
             label="Custodian"
@@ -95,6 +102,7 @@
           >
             <template v-slot:append>
               <VBtn
+                x-small
                 v-clipboard="() => custodian"
                 height="22"
                 color="primary"
@@ -103,6 +111,7 @@
                 Copy
               </VBtn>
               <VBtn
+                x-small
                 @click="deleteByIndex(index)"
                 v-if="index !== 0"
                 plain
@@ -113,6 +122,7 @@
                 <VIcon>mdi-minus</VIcon>
               </VBtn>
               <VBtn
+                x-small
                 v-if="index === custodians.length - 1"
                 @click="addNewField(custodians.length)"
                 plain
@@ -126,8 +136,9 @@
           </VTextField>
         </div>
         <VTextField
+          autocomplete="off"
+          dense
           v-if="accountsCount === 0"
-          class="mb-4"
           v-model.trim="password"
           clearable
           :rules="[(v) => !!v || 'Password is required']"
@@ -136,8 +147,9 @@
           :error-messages="passwordErrors"
         ></VTextField>
         <VTextField
+          autocomplete="off"
+          dense
           v-if="accountsCount === 0"
-          class="mb-4"
           v-model.trim="confirmPassword"
           clearable
           :rules="[
@@ -148,8 +160,20 @@
           label="Confirm password"
         ></VTextField>
         <div class="d-flex justify-end">
-          <VBtn link to="/initialize" class="mr-4"> Back </VBtn>
           <VBtn
+            x-small
+            :light="true"
+            color="white"
+            width="80"
+            link
+            to="/initialize"
+            class="mr-4"
+          >
+            Back
+          </VBtn>
+          <VBtn
+            x-small
+            width="80"
             color="primary"
             type="submit"
             :disabled="

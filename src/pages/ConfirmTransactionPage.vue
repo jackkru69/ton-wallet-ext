@@ -1,5 +1,5 @@
 <template>
-  <div class="v-confirm-page py-8">
+  <div class="v-confirm-page pb-8">
     <Inner>
       <VForm
         ref="form"
@@ -7,18 +7,22 @@
         lazy-validation
         @submit.prevent="confirmTx"
       >
-        <h1 class="mb-8">Confirm transaction</h1>
+        <h1 class="mb-5">Confirm transaction</h1>
         <VTextField
-          class="mb-4"
+          autocomplete="off"
+          dense
           v-model="address"
           clearable
           outlined
           label="Address"
-          :rules="[(v) => !!v || 'Address is required']"
+          :rules="[
+            (v) => !!v || 'Address is required',
+            () => isValidAddress || 'invalid address format',
+          ]"
         ></VTextField>
 
         <VDataTable
-          v-if="address && isCustodian === true"
+          v-if="address && isCustodian === true && pendingTxs"
           v-model="selected"
           :loading="isTxsPending"
           :headers="headersPendingTxs"
@@ -28,12 +32,22 @@
           hide-default-footer
           item-key="id"
           show-select
-          class="mb-4"
         >
         </VDataTable>
         <div class="d-flex justify-end">
-          <VBtn to="/" class="mr-4"> Back </VBtn>
           <VBtn
+            color="white"
+            :light="true"
+            x-small
+            width="80"
+            to="/"
+            class="mr-4"
+          >
+            Back
+          </VBtn>
+          <VBtn
+            x-small
+            width="80"
             :loading="isPending"
             type="submit"
             color="primary"
@@ -127,14 +141,19 @@ export default class TransferPage extends Mappers {
     };
   }
 
+  public get isValidAddress(): boolean {
+    return this.address.match(/^(-1|0):[a-fA-F0-9]{64}$/g) !== null;
+  }
+
   public get contract() {
-    if (this.address)
+    if (this.isValidAddress) {
       return new TonContract({
         client: tonService.client,
         address: this.address,
         name: "safe-multisig",
         tonPackage: contracts["safe-multisig"],
       });
+    }
     return false;
   }
 
@@ -150,17 +169,21 @@ export default class TransferPage extends Mappers {
         });
         if (response.value.transactions) {
           this.pendingTxs = response.value.transactions;
+        } else {
+          this.pendingTxs = [];
         }
       } catch (error) {
+        this.pendingTxs = [];
         throw new Error(error);
       }
     }
   }
 
   @Watch("address")
-  async onChangeAddress(address: string) {
-    if (address) {
-      const account = this.getAccountByAddress(address);
+  async onChangeAddress() {
+    this.pendingTxs = [];
+    if (this.isValidAddress) {
+      const account = this.getAccountByAddress(this.activeAccountAddress);
       if (account) {
         if (this.contract) {
           try {
@@ -173,6 +196,8 @@ export default class TransferPage extends Mappers {
                 .includes(`0x${account.publicKey}`)
             ) {
               this.isCustodian = true;
+            } else {
+              this.isCustodian = false;
             }
           } catch (error) {
             throw new Error(error);
@@ -180,8 +205,12 @@ export default class TransferPage extends Mappers {
           await this.fetchPendingTxs();
         }
       }
+    } else {
+      this.isCustodian = false;
+      this.pendingTxs = [];
     }
   }
+
   @Inject() showTypePasswordModal!: any;
 
   async confirmTx() {

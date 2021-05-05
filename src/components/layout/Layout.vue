@@ -29,6 +29,8 @@ import { store } from "@/store";
 import { checkDeployStatus } from "@/ton/ton.utils";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
 
+import "@/styles/font.sass";
+
 const Mappers = Vue.extend({
   methods: {
     ...accountsModuleMapper.mapActions([

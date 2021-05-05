@@ -1,5 +1,5 @@
 <template>
-  <div class="v-create-wallet-page py-8">
+  <div class="v-create-wallet-page pb-8">
     <Inner>
       <VForm
         ref="form"
@@ -7,9 +7,10 @@
         lazy-validation
         @submit.prevent="onSubmit"
       >
-        <h1 class="mb-8">Change password</h1>
+        <h1 class="mb-5">Change password</h1>
         <VTextField
-          class="mb-8"
+          autocomplete="off"
+          dense
           v-model.trim="oldPassword"
           clearable
           :rules="[(v) => !!v || 'Old password is required']"
@@ -18,7 +19,8 @@
           label="Old password"
         ></VTextField>
         <VTextField
-          class="mb-8"
+          autocomplete="off"
+          dense
           v-model.trim="newPassword"
           clearable
           :rules="[(v) => !!v || 'Password is required']"
@@ -26,7 +28,8 @@
           label="Password"
         ></VTextField>
         <VTextField
-          class="mb-8"
+          autocomplete="off"
+          dense
           v-model.trim="confirmNewPassword"
           clearable
           :rules="[
@@ -37,8 +40,19 @@
           label="Confirm password"
         ></VTextField>
         <div class="d-flex justify-end">
-          <VBtn to="/" class="mr-4"> Back </VBtn>
           <VBtn
+            x-small
+            width="80"
+            to="/"
+            class="mr-4"
+            :light="true"
+            color="white"
+          >
+            Back
+          </VBtn>
+          <VBtn
+            x-small
+            width="80"
             color="primary"
             type="submit"
             :disabled="!oldPassword || !newPassword || !confirmNewPassword"

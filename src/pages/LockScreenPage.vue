@@ -10,6 +10,7 @@
         <h1 class="mb-8">Unlock wallet</h1>
         <h2 class="mb-8">Password</h2>
         <VTextField
+          autocomplete="off"
           class="mb-8"
           v-model.trim="password"
           clearable
@@ -20,7 +21,7 @@
         ></VTextField>
 
         <div class="d-flex justify-center">
-          <VBtn color="primary" type="submit" :disabled="!password">
+          <VBtn x-small color="primary" type="submit" :disabled="!password">
             Unlock
           </VBtn>
         </div>

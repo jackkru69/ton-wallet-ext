@@ -12,6 +12,7 @@
         </VCardTitle>
         <VCardText>
           <VTextField
+            autocomplete="off"
             v-model.trim="password"
             clearable
             :rules="[(v) => !!v || 'Password is required']"
@@ -23,8 +24,8 @@
         ></VCardText>
         <v-card-actions>
           <VSpacer></VSpacer>
-          <VBtn text @click="rejectPromise()"> Cancel </VBtn>
-          <VBtn text type="submit"> Submit </VBtn>
+          <VBtn x-small text @click="rejectPromise()"> Cancel </VBtn>
+          <VBtn x-small text type="submit"> Submit </VBtn>
         </v-card-actions>
       </VForm>
     </VCard>

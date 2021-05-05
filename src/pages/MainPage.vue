@@ -15,6 +15,7 @@
         <VTooltip bottom>
           <template v-slot:activator="{ on, attrs }">
             <VBtn
+              x-small
               plain
               v-clipboard="() => account && account.address"
               class="v-main-page__menu-bar-selected-account"
@@ -38,9 +39,10 @@
           </template>
           <span>Copy to clipboard</span>
         </VTooltip>
-        <VMenu left offset-y>
+        <VMenu left nudge-bottom="6" offset-y :light="true">
           <template v-slot:activator="{ attrs, on }">
             <VBtn
+              x-small
               icon
               v-bind="attrs"
               v-on="on"
@@ -80,6 +82,7 @@
       </div>
       <div class="d-flex justify-center align center">
         <VBtn
+          x-small
           v-if="activeNetworkServer === 'http://0.0.0.0'"
           :loading="isAirdropPending"
           @click="airdrop"
@@ -90,6 +93,7 @@
         <VTooltip bottom>
           <template v-slot:activator="{ on, attrs }">
             <VBtn
+              x-small
               class="mr-4"
               @click="transferOrConfirm('confirm')"
               v-on="on"
@@ -103,6 +107,7 @@
         <VTooltip bottom>
           <template v-slot:activator="{ on, attrs }">
             <VBtn
+              x-small
               @click="transferOrConfirm('transfer')"
               v-on="on"
               v-bind="attrs"

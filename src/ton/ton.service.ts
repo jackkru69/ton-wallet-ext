@@ -10,13 +10,6 @@ export class TonService {
   constructor() {
     if (TonService.instance) return TonService.instance;
     TonClient.useBinaryLibrary(libWeb);
-    // this.network = network;
-    // this.client = new TonClient({
-    //   network: {
-    //     server_address: network,
-    //   },
-    // });
-
     TonService.instance = this;
   }
 

@@ -1,5 +1,5 @@
 <template >
-  <div v-if="accountsCount === 0" class="v-create-wallet-page py-8">
+  <div class="v-create-wallet-page pb-8">
     <Inner>
       <VForm
         ref="form"
@@ -7,10 +7,10 @@
         lazy-validation
         @submit.prevent="onSubmit"
       >
-        <h1 class="mb-8">Easy add wallet</h1>
-        <h2 class="mb-8">Password</h2>
+        <h1 class="mb-5">Easy add wallet</h1>
         <VTextField
-          class="mb-8"
+          autocomplete="off"
+          dense
           v-model.trim="password"
           clearable
           :rules="[(v) => !!v || 'Password is required']"
@@ -18,7 +18,8 @@
           label="Password"
         ></VTextField>
         <VTextField
-          class="mb-8"
+          autocomplete="off"
+          dense
           v-model.trim="confirmPassword"
           clearable
           :rules="[
@@ -29,8 +30,19 @@
           label="Confirm password"
         ></VTextField>
         <div class="d-flex justify-end">
-          <VBtn to="/initialize" class="mr-4"> Back </VBtn>
           <VBtn
+            x-small
+            width="80"
+            to="/initialize"
+            class="mr-4"
+            color="white"
+            :light="true"
+          >
+            Back
+          </VBtn>
+          <VBtn
+            x-small
+            width="80"
             color="primary"
             type="submit"
             :disabled="!password || !confirmPassword"

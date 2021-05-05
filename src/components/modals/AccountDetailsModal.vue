@@ -6,6 +6,7 @@
       </VCardTitle>
       <VCardText>
         <VTextField
+          autocomplete="off"
           v-model.trim="modelAccountName"
           clearable
           :rules="[(v) => !!v || 'Name is required']"
@@ -18,13 +19,20 @@
         <h4>Public key</h4>
         <div class="d-flex justify-space-between align-center mb-4">
           {{ sliceString(publicKey, 12) }}
-          <VBtn v-clipboard="() => publicKey" type="button" icon class="ml-2">
+          <VBtn
+            x-small
+            v-clipboard="() => publicKey"
+            type="button"
+            icon
+            class="ml-2"
+          >
             <VIcon> mdi-content-copy </VIcon>
           </VBtn>
         </div>
 
         <div class="mb-4">
           <VBtn
+            x-small
             @click="onClickExportSeedPhrase"
             v-if="!seedPhrase"
             width="100%"
@@ -41,6 +49,7 @@
           ></VTextarea>
         </div>
         <VBtn
+          x-small
           @click="onClickExportSecretPhrase"
           v-if="!secretKey"
           width="100%"

@@ -1,5 +1,5 @@
 <template>
-  <div class="v-create-wallet-page py-8">
+  <div class="v-create-wallet-page pb-8">
     <Inner>
       <VForm
         ref="form"
@@ -7,10 +7,10 @@
         lazy-validation
         @submit.prevent="onSubmit"
       >
-        <h1 class="mb-8">Add wallet</h1>
+        <h1 class="mb-5">Add wallet</h1>
         <VTextField
+          autocomplete="off"
           dense
-          class="mb-4"
           v-model="name"
           clearable
           outlined
@@ -19,7 +19,6 @@
         ></VTextField>
         <VSelect
           dense
-          class="mb-4"
           v-model="walletType"
           :items="walletsTypes"
           label="Wallet type"
@@ -27,7 +26,6 @@
         ></VSelect>
         <VSelect
           dense
-          class="mb-4"
           v-model="seedPhraseWorldCount"
           :items="[12, 24]"
           label="Seed phrase world count"
@@ -37,22 +35,24 @@
           ]"
         ></VSelect>
         <VTextField
+          autocomplete="off"
           dense
-          class="mb-4"
           v-model.trim="seedPhrase"
           outlined
           label="Seed phrase"
           readonly
         >
           <template v-slot:append>
-            <VBtn @click="generatePhrase" class="mr-3"> Generate </VBtn>
-            <VBtn v-clipboard="() => seedPhrase" color="primary"> Copy </VBtn>
+            <VBtn x-small @click="generatePhrase" class="mr-3"> Generate </VBtn>
+            <VBtn x-small v-clipboard="() => seedPhrase" color="primary">
+              Copy
+            </VBtn>
           </template></VTextField
         >
         <VTextField
+          autocomplete="off"
           dense
           v-if="accountsCount === 0"
-          class="mb-4"
           v-model.trim="password"
           clearable
           :rules="[(v) => !!v || 'Password is required']"
@@ -61,9 +61,9 @@
           :error-messages="passwordErrors"
         ></VTextField>
         <VTextField
+          autocomplete="off"
           dense
           v-if="accountsCount === 0"
-          class="mb-4"
           v-model.trim="confirmPassword"
           clearable
           :rules="[
@@ -75,20 +75,26 @@
         ></VTextField>
         <h2 class="mb-4">Custodians: {{ custodians.length }}</h2>
         <VTextField
+          autocomplete="off"
           dense
           v-for="(custodian, index) in custodians"
           :key="index"
-          class="mb-4"
           v-model.trim="custodians[index]"
           outlined
           label="Custodian"
           :rules="[(v) => !!`${v}` || 'Custodian is required']"
         >
           <template v-slot:append>
-            <VBtn v-clipboard="() => custodian" color="primary" class="mr-1">
+            <VBtn
+              x-small
+              v-clipboard="() => custodian"
+              color="primary"
+              class="mr-1"
+            >
               Copy
             </VBtn>
             <VBtn
+              x-small
               @click="deleteByIndex(index)"
               v-if="index !== 0"
               plain
@@ -98,6 +104,7 @@
               <VIcon>mdi-minus</VIcon>
             </VBtn>
             <VBtn
+              x-small
               v-if="index === custodians.length - 1"
               @click="addNewField(custodians.length)"
               plain
@@ -110,8 +117,10 @@
         </VTextField>
 
         <div class="d-flex justify-end">
-          <VBtn to="/initialize" class="mr-4"> Back </VBtn>
+          <VBtn width="80" x-small to="/initialize" class="mr-4"> Back </VBtn>
           <VBtn
+            width="80"
+            x-small
             color="primary"
             type="submit"
             :disabled="!valid || !name || isEmpty(custodians)"
