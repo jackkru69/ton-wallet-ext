@@ -11,42 +11,17 @@
     />
     <InsufficientFundsModal v-model="isInsufficientFundsModalOpen" />
     <Inner>
-      <div class="v-main-page__menu-bar">
-        <VTooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <VBtn
-              x-small
-              plain
-              v-clipboard="() => account && account.address"
-              class="v-main-page__menu-bar-selected-account"
-              v-bind="attrs"
-              v-on="on"
-              rounded
-            >
-              <template v-slot:default>
-                <div>
-                  <div>{{ account && account.name ? account.name : "" }}</div>
-                  <div>
-                    {{
-                      account && account.address
-                        ? sliceString(account.address)
-                        : ""
-                    }}
-                  </div>
-                </div>
-              </template>
-            </VBtn>
-          </template>
-          <span>Copy to clipboard</span>
-        </VTooltip>
+      <div class="d-flex align-center justify-space-between mb-5">
+        <h1>Account</h1>
         <VMenu left nudge-bottom="6" offset-y :light="true">
           <template v-slot:activator="{ attrs, on }">
             <VBtn
               x-small
-              icon
               v-bind="attrs"
               v-on="on"
-              class="v-main-page__menu-bar-dots"
+              color="primary"
+              min-width="30"
+              :style="{ padding: 0 }"
             >
               <VIcon>mdi-dots-vertical</VIcon>
             </VBtn>
@@ -69,82 +44,91 @@
           </VList>
         </VMenu>
       </div>
-      <v-divider></v-divider>
-      <div class="d-flex justify-center my-4">
-        <h1>
-          {{ baseToAssetAmount(balance, "TON", 3) + " " + "TON" }}
-        </h1>
-      </div>
-      <div class="d-flex justify-center my-4">
-        <h3 role="button" aria-pressed="" @click="isCustodiansModalOpen = true">
-          Custodians {{ account && account.custodians.length }}
-        </h3>
-      </div>
-      <div class="d-flex justify-center align center">
-        <VBtn
-          x-small
-          v-if="activeNetworkServer === 'http://0.0.0.0'"
-          :loading="isAirdropPending"
-          @click="airdrop"
-          class="mr-4"
-          icon
+      <VCard :light="true" class="mb-5">
+        <v-img
+          class="pa-4"
+          position="top right"
+          height="130px"
+          width="100%"
+          contain
+          src="@/assets/img/balance-card-background.svg"
+        >
+          <h2>{{ account && account.name ? account.name : "" }}</h2>
+          <h1>{{ baseToAssetAmount(balance, "TON", 3) + " " + "TON" }}</h1>
+          <VTooltip bottom>
+            <template v-slot:activator="{ on, attrs }">
+              <VBtn
+                :style="{ padding: 0 }"
+                x-small
+                plain
+                v-clipboard="() => account && account.address"
+                v-bind="attrs"
+                v-on="on"
+                rounded
+              >
+                <template v-slot:default>
+                  <div>
+                    {{
+                      account && account.address
+                        ? sliceString(account.address, 6)
+                        : ""
+                    }}
+                  </div>
+                </template>
+              </VBtn>
+            </template>
+            <span>Copy to clipboard</span>
+          </VTooltip>
+          <h3
+            role="button"
+            aria-pressed=""
+            @click="isCustodiansModalOpen = true"
+          >
+            Custodians {{ account && account.custodians.length }}
+          </h3>
+        </v-img>
+      </VCard>
+      <div
+        class="d-flex justify-center mb-5"
+        v-if="activeNetworkServer === 'http://0.0.0.0'"
+      >
+        <VBtn x-small :loading="isAirdropPending" @click="airdrop" icon
           ><VIcon>mdi-water</VIcon></VBtn
         >
-        <VTooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <VBtn
-              x-small
-              class="mr-4"
-              @click="transferOrConfirm('confirm')"
-              v-on="on"
-              v-bind="attrs"
-              icon
-              ><VIcon :width="40">mdi-draw</VIcon></VBtn
-            >
-          </template>
-          <span>Confirm transaction</span>
-        </VTooltip>
-        <VTooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
-            <VBtn
-              x-small
-              @click="transferOrConfirm('transfer')"
-              v-on="on"
-              v-bind="attrs"
-              icon
-              ><VIcon :width="40">mdi-send</VIcon></VBtn
-            >
-          </template>
-          <span>Create transfer</span>
-        </VTooltip>
       </div>
+      <div class="d-flex justify-space-between mb-4">
+        <VBtn
+          color="primary"
+          x-small
+          width="calc(50% - 10px)"
+          @click="transferOrConfirm('confirm')"
+          >Confirm transaction</VBtn
+        >
+        <VBtn
+          width="calc(50% - 10px)"
+          x-small
+          @click="transferOrConfirm('transfer')"
+          color="primary"
+          >Send transaction</VBtn
+        >
+      </div>
+      <h1 class="mb-4">Transactions</h1>
 
-      <VTabs grow v-model="tab" class="my-8">
-        <VTabsSlider></VTabsSlider>
-        <VTab v-for="item in items" :key="item.tab" value="ptxs">
-          {{ item.title }}
-        </VTab>
-      </VTabs>
-      <VTabsItems v-model="tab">
-        <VTabItem key="txs">
-          <VDataTable
-            :loading="isTxsPendins"
-            :headers="headersTxs"
-            :items="formattedTxs"
-            :items-per-page="5"
-          >
-            <template v-slot:[`item.type`]="{ item }">
-              <VChip w :color="item.type === 'minus' ? 'red' : 'green'">
-                {{ item.type === "plus" ? "IN" : "OUT" }}
-              </VChip>
-            </template></VDataTable
-          >
-        </VTabItem>
-        <!-- <VTabItem key="tokens">
-          <VDataTable :headers="[]" :items="[]" :items-per-page="5">
-          </VDataTable>
-        </VTabItem> -->
-      </VTabsItems>
+      <VDataTable
+        :loading="isTxsPendins"
+        :headers="headersTxs"
+        :items="formattedTxs"
+        :items-per-page="5"
+        hide-default-footer
+        hide-default-header
+        class="v-main-page__table"
+      >
+        <template v-slot:[`item.type`]="{ item }">
+          <VChip w :color="item.type === 'minus' ? 'red' : 'green'">
+            {{ item.type === "plus" ? "IN" : "OUT" }}
+          </VChip>
+        </template></VDataTable
+      >
     </Inner>
   </div>
 </template>
@@ -224,16 +208,6 @@ export default class MainPage extends Mappers {
   @Inject() showTypePasswordModal!: any;
 
   txs: TxType[] = [];
-
-  tab = "txs";
-
-  items = [
-    {
-      title: "Transactions",
-      tab: "txs",
-    },
-    // { title: "Tokens", tab: "tokens" },
-  ];
 
   headersTxs = [
     {
@@ -398,18 +372,6 @@ export default class MainPage extends Mappers {
 
 <style lang="sass">
 .v-main-page
-  &__menu-bar
-    display: grid
-    grid-template-columns: 30% minmax(30%, 1fr) 30%
-    -webkit-column-gap: 5px
-    -moz-column-gap: 5px
-    column-gap: 5px
-    padding: 0 8px
-    border-bottom: 1px solid #d6d9dc
-    height: 64px
-    &-selected-account
-      grid-column: 2/span 1
-      place-self: center stretch
-    &-dots
-      place-self: center end
+  &__table
+    background-color: #303540 !important
 </style>

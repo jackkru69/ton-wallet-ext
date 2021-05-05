@@ -1,5 +1,5 @@
 <template>
-  <div class="v-create-wallet-page pb-8">
+  <div class="v-add-account-page pb-8">
     <Inner>
       <VForm
         ref="form"
@@ -23,32 +23,49 @@
           :items="walletsTypes"
           label="Wallet type"
           outlined
+          :menu-props="{ 'offset-y': true }"
         ></VSelect>
         <VSelect
           dense
+          class="mb-5"
           v-model="seedPhraseWorldCount"
           :items="[12, 24]"
-          label="Seed phrase world count"
+          label="World count"
           outlined
-          :rules="[
-            (v) => !!`${v}` || 'Seed phrase world count type is required',
-          ]"
+          hide-details
+          :menu-props="{ 'offset-y': true }"
+          :rules="[(v) => !!`${v}` || 'World count type is required']"
         ></VSelect>
-        <VTextField
-          autocomplete="off"
-          dense
-          v-model.trim="seedPhrase"
-          outlined
-          label="Seed phrase"
-          readonly
-        >
-          <template v-slot:append>
-            <VBtn x-small @click="generatePhrase" class="mr-3"> Generate </VBtn>
-            <VBtn x-small v-clipboard="() => seedPhrase" color="primary">
-              Copy
-            </VBtn>
-          </template></VTextField
-        >
+        <div class="d-flex justify-end mb-5">
+          <VBtn
+            min-width="30"
+            :style="{ padding: 0 }"
+            class="mr-3"
+            x-small
+            @click="generatePhrase"
+            color="primary"
+          >
+            <VIcon small> mdi-autorenew</VIcon>
+          </VBtn>
+          <VBtn
+            min-width="30"
+            :style="{ padding: 0 }"
+            x-small
+            v-clipboard="() => seedPhrase"
+            color="primary"
+          >
+            <VIcon small> mdi-content-copy</VIcon>
+          </VBtn>
+        </div>
+        <div class="v-add-account-page__grid-table mb-5">
+          <div
+            class="v-add-account-page__grid-table-item"
+            v-for="(word, i) in formattedSeedPhrase"
+            :key="i"
+          >
+            {{ word }}
+          </div>
+        </div>
         <VTextField
           autocomplete="off"
           dense
@@ -73,7 +90,19 @@
           outlined
           label="Confirm password"
         ></VTextField>
-        <h2 class="mb-4">Custodians: {{ custodians.length }}</h2>
+        <div class="d-flex align-center justify-space-between mb-5">
+          <h2>Custodians: {{ custodians.length }}</h2>
+          <VBtn
+            min-width="30"
+            :style="{ padding: 0 }"
+            x-small
+            @click="addNewField(custodians.length)"
+            color="primary"
+          >
+            <VIcon small> mdi-plus-thick</VIcon>
+          </VBtn>
+        </div>
+
         <VTextField
           autocomplete="off"
           dense
@@ -85,39 +114,41 @@
           :rules="[(v) => !!`${v}` || 'Custodian is required']"
         >
           <template v-slot:append>
-            <VBtn
-              x-small
-              v-clipboard="() => custodian"
-              color="primary"
-              class="mr-1"
-            >
-              Copy
-            </VBtn>
-            <VBtn
-              x-small
-              @click="deleteByIndex(index)"
-              v-if="index !== 0"
-              plain
-              icon
-              color="red"
-            >
-              <VIcon>mdi-minus</VIcon>
-            </VBtn>
-            <VBtn
-              x-small
-              v-if="index === custodians.length - 1"
-              @click="addNewField(custodians.length)"
-              plain
-              icon
-              color="green"
-            >
-              <VIcon>mdi-plus</VIcon>
-            </VBtn>
+            <div class="v-add-account-page__btn-inner">
+              <VBtn
+                min-width="30"
+                :style="{ padding: 0 }"
+                x-small
+                v-clipboard="() => custodian"
+                color="primary"
+              >
+                <VIcon small> mdi-content-copy</VIcon>
+              </VBtn>
+              <VBtn
+                min-width="30"
+                :style="{ padding: 0 }"
+                x-small
+                @click="deleteByIndex(index)"
+                v-if="index !== 0"
+                class="ml-1"
+              >
+                <VIcon small> mdi-close</VIcon>
+              </VBtn>
+            </div>
           </template>
         </VTextField>
 
         <div class="d-flex justify-end">
-          <VBtn width="80" x-small to="/initialize" class="mr-4"> Back </VBtn>
+          <VBtn
+            width="80"
+            :light="true"
+            color="white"
+            x-small
+            to="/initialize"
+            class="mr-4"
+          >
+            Back
+          </VBtn>
           <VBtn
             width="80"
             x-small
@@ -197,6 +228,12 @@ export default class CreateWalletPage extends Mappers {
     }
   }
 
+  public get formattedSeedPhrase() {
+    return this.seedPhrase
+      .split(" ")
+      .map((word, index) => `${index + 1}. ${word}`);
+  }
+
   @Watch("seedPhraseWorldCount")
   async onChangeSeedPhraseWorldCount() {
     await this.generatePhrase();
@@ -272,3 +309,21 @@ export default class CreateWalletPage extends Mappers {
 }
 </script>
 
+<style lang="sass" scoped>
+.v-add-account-page
+  &__btn-inner
+    margin-top: -3px
+    margin-right: -7px
+
+  &__grid-table
+    display: grid
+    grid-template-columns: 1fr 1fr 1fr 1fr
+    grid-column-gap: 4px
+    grid-row-gap: 4px
+    border: 1px solid #FFFFFF
+    box-sizing: border-box
+    border-radius: 5px
+    padding: 14px
+    &-item
+      line-height: 20px
+</style>

@@ -200,7 +200,7 @@ export default class Header extends Mappers {
     width: 40px
     height: 40px
   &__select
-    max-width: 250px
+    max-width: 190px
   &__list
     overflow-y: auto
 </style>
