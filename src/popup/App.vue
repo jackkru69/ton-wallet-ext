@@ -12,9 +12,19 @@ export default {
 };
 </script>
 
-<style>
-html {
-  width: 357px;
-  height: 600px;
-}
+<style lang="sass">
+html, body
+  width: 357px
+  height: 600px
+  // /* this will hide the scrollbar in mozilla based browsers */
+  // overflow: -moz-scrollbars-none
+  // /* this will hide the scrollbar in internet explorers */
+  // -ms-overflow-style: none
+  // &::-webkit-scrollbar
+  //   display: none !important
+// body
+//   &::-webkit-scrollbar
+//     display: none !important
 </style>
+
+

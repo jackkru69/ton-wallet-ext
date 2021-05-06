@@ -141,7 +141,7 @@
         <div class="d-flex justify-end">
           <VBtn
             width="80"
-            :light="true"
+            light
             color="white"
             x-small
             to="/initialize"

@@ -1,5 +1,5 @@
 <template>
-  <VDialog v-model="isOpen" persistent max-width="325px">
+  <VDialog light v-model="isOpen" persistent max-width="325px">
     <VCard>
       <VForm
         ref="form"
@@ -13,6 +13,7 @@
         <VCardText>
           <VTextField
             autocomplete="off"
+            hide-details
             v-model.trim="password"
             clearable
             :rules="[(v) => !!v || 'Password is required']"

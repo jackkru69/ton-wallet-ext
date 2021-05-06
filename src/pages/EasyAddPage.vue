@@ -36,7 +36,7 @@
             to="/initialize"
             class="mr-4"
             color="white"
-            :light="true"
+            light
           >
             Back
           </VBtn>

@@ -1,5 +1,5 @@
 <template>
-  <VDialog :retain-focus="false" v-model="model" max-width="325px">
+  <VDialog light :retain-focus="false" v-model="model" max-width="325px">
     <VCard>
       <VCardTitle>
         <h3>Account details</h3>
@@ -29,8 +29,26 @@
             <VIcon> mdi-content-copy </VIcon>
           </VBtn>
         </div>
-
-        <div class="mb-4">
+        <h4>Custodians</h4>
+        <div>
+          <div
+            v-for="(custodian, i) in account.custodians"
+            :key="i"
+            class="d-flex justify-space-between align-center"
+          >
+            {{ sliceString(custodian, 14) }}
+            <VBtn
+              x-small
+              v-clipboard="() => custodian"
+              type="button"
+              icon
+              class="ml-2"
+            >
+              <VIcon> mdi-content-copy </VIcon>
+            </VBtn>
+          </div>
+        </div>
+        <div class="my-4" v-if="!account.isRestoredWithKeyPair">
           <VBtn
             x-small
             @click="onClickExportSeedPhrase"
@@ -45,6 +63,9 @@
             outlined
             v-model="seedPhrase"
             auto-grow
+            rows="3"
+            readonly
+            hide-details
             label="Seed Phrase"
           ></VTextarea>
         </div>
@@ -62,6 +83,9 @@
           outlined
           v-model="secretKey"
           auto-grow
+          rows="3"
+          hide-details
+          readonly
           label="Secret Key"
         ></VTextarea>
       </VCardText>

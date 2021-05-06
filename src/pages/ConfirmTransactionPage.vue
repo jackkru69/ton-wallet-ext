@@ -22,6 +22,7 @@
         ></VTextField>
 
         <VDataTable
+          class="v-confirm-page__table mb-5"
           v-if="address && isCustodian === true && pendingTxs"
           v-model="selected"
           :loading="isTxsPending"
@@ -30,19 +31,17 @@
           :items-per-page="5"
           disable-pagination
           hide-default-footer
+          mobile-breakpoint="0"
           item-key="id"
           show-select
+          :item-class="() => 'table-item'"
         >
+          <template v-slot:[`item.confirmation`]="{ item }">{{
+            item.signsReceived + "/" + item.signsRequired
+          }}</template>
         </VDataTable>
         <div class="d-flex justify-end">
-          <VBtn
-            color="white"
-            :light="true"
-            x-small
-            width="80"
-            to="/"
-            class="mr-4"
-          >
+          <VBtn color="white" light x-small width="80" to="/" class="mr-4">
             Back
           </VBtn>
           <VBtn
@@ -100,11 +99,6 @@ export default class TransferPage extends Mappers {
 
   headersPendingTxs = [
     {
-      text: "ID",
-      value: "fId",
-      sortable: false,
-    },
-    {
       text: "Creator",
       value: "fCreator",
       sortable: false,
@@ -120,13 +114,8 @@ export default class TransferPage extends Mappers {
       sortable: false,
     },
     {
-      text: "signsReceived",
-      value: "signsReceived",
-      sortable: false,
-    },
-    {
-      text: "signsRequired",
-      value: "signsRequired",
+      text: "Сonfirmation",
+      value: "confirmation",
       sortable: false,
     },
   ];
@@ -247,3 +236,15 @@ export default class TransferPage extends Mappers {
 }
 </script>
 
+<style lang="sass" scoped>
+.v-confirm-page
+  &__table
+    border: 1px solid #FFFFFF
+    box-sizing: border-box
+    border-radius: 5px
+    background-color: #303540 !important
+    .table-item > td
+
+      padding: 8px !important
+      border-bottom: none !important
+</style>

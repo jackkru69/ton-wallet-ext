@@ -1,5 +1,5 @@
 <template>
-  <VDialog v-model="isOpen" persistent max-width="325px">
+  <VDialog light v-model="isOpen" persistent max-width="325px">
     <VCard>
       <VForm
         ref="form"

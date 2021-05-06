@@ -1,10 +1,6 @@
 <template>
   <div class="v-main-page">
     <DeployModal ref="deployModal" />
-    <CustodiansModal
-      v-model="isCustodiansModalOpen"
-      :custodians="account ? account.custodians : []"
-    />
     <AccountDetailsModal
       v-model="isAccountDetailsModalOpen"
       :account="account"
@@ -12,8 +8,18 @@
     <InsufficientFundsModal v-model="isInsufficientFundsModalOpen" />
     <Inner>
       <div class="d-flex align-center justify-space-between mb-5">
-        <h1>Account</h1>
-        <VMenu left nudge-bottom="6" offset-y :light="true">
+        <h1>
+          Account
+          <VBtn
+            v-if="activeNetworkServer === 'http://0.0.0.0'"
+            x-small
+            :loading="isAirdropPending"
+            @click="airdrop"
+            icon
+            ><VIcon>mdi-water</VIcon></VBtn
+          >
+        </h1>
+        <VMenu left nudge-bottom="6" offset-y light>
           <template v-slot:activator="{ attrs, on }">
             <VBtn
               x-small
@@ -44,11 +50,11 @@
           </VList>
         </VMenu>
       </div>
-      <VCard :light="true" class="mb-5">
+      <VCard light class="mb-5">
         <v-img
           class="pa-4"
           position="top right"
-          height="130px"
+          height="110px"
           width="100%"
           contain
           src="@/assets/img/balance-card-background.svg"
@@ -79,24 +85,10 @@
             </template>
             <span>Copy to clipboard</span>
           </VTooltip>
-          <h3
-            role="button"
-            aria-pressed=""
-            @click="isCustodiansModalOpen = true"
-          >
-            Custodians {{ account && account.custodians.length }}
-          </h3>
         </v-img>
       </VCard>
-      <div
-        class="d-flex justify-center mb-5"
-        v-if="activeNetworkServer === 'http://0.0.0.0'"
-      >
-        <VBtn x-small :loading="isAirdropPending" @click="airdrop" icon
-          ><VIcon>mdi-water</VIcon></VBtn
-        >
-      </div>
-      <div class="d-flex justify-space-between mb-4">
+
+      <div class="d-flex justify-space-between mb-5">
         <VBtn
           color="primary"
           x-small
@@ -112,23 +104,55 @@
           >Send transaction</VBtn
         >
       </div>
+
       <h1 class="mb-4">Transactions</h1>
 
       <VDataTable
         :loading="isTxsPendins"
-        :headers="headersTxs"
         :items="formattedTxs"
         :items-per-page="5"
         hide-default-footer
         hide-default-header
+        mobile-breakpoint="0"
         class="v-main-page__table"
       >
-        <template v-slot:[`item.type`]="{ item }">
-          <VChip w :color="item.type === 'minus' ? 'red' : 'green'">
-            {{ item.type === "plus" ? "IN" : "OUT" }}
-          </VChip>
-        </template></VDataTable
-      >
+        <template v-slot:[`item`]="{ item }">
+          <tr>
+            <td width="32px" :style="{ 'padding-right': '16px !important' }">
+              <VBtn
+                v-if="item.type === 'plus'"
+                x-small
+                light
+                min-width="30"
+                :style="{ padding: 0 }"
+              >
+                <VIcon>mdi-plus-thick</VIcon>
+              </VBtn>
+              <VBtn
+                v-if="item.type === 'minus'"
+                x-small
+                light
+                min-width="30"
+                :style="{ padding: 0 }"
+              >
+                <VIcon>mdi-minus-thick</VIcon>
+              </VBtn>
+            </td>
+            <td>
+              <div class="v-main-page__table-amount">
+                {{ item.fValue + " TON" }}
+              </div>
+              <div class="v-main-page__table-tx-d">
+                {{ item.fId }}
+              </div>
+            </td>
+            <td>
+              <div class="v-main-page__table-flex-col">
+                <TimeAgo long refresh :datetime="item.now * 1000"></TimeAgo>
+              </div>
+            </td>
+          </tr> </template
+      ></VDataTable>
     </Inner>
   </div>
 </template>
@@ -138,6 +162,8 @@ import { Component, Inject, Vue, Watch } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import DeployModal from "@/components/modals/DeployModal.vue";
 import CustodiansModal from "@/components/modals/CustodiansModal.vue";
+// @ts-ignore
+import { TimeAgo } from "vue2-timeago";
 
 import {
   AccountInterface,
@@ -189,9 +215,9 @@ const Mappers = Vue.extend({
   components: {
     Inner,
     DeployModal,
-    CustodiansModal,
     AccountDetailsModal,
     InsufficientFundsModal,
+    TimeAgo,
   },
   methods: { sliceString, baseToAssetAmount },
 })
@@ -201,41 +227,12 @@ export default class MainPage extends Mappers {
   isAirdropPending = false;
   isTxsPendins = true;
 
-  isCustodiansModalOpen = false;
   isAccountDetailsModalOpen = false;
   isInsufficientFundsModalOpen = false;
 
   @Inject() showTypePasswordModal!: any;
 
   txs: TxType[] = [];
-
-  headersTxs = [
-    {
-      text: "",
-      value: "type",
-      sortable: false,
-    },
-    {
-      text: "ID",
-      value: "fId",
-      sortable: false,
-    },
-    {
-      text: "Address",
-      value: "address",
-      sortable: false,
-    },
-    {
-      text: "Amount",
-      value: "fValue",
-      sortable: false,
-    },
-    {
-      text: "Comment",
-      value: "comment",
-      sortable: false,
-    },
-  ];
 
   public get account(): AccountInterface | undefined {
     return this.getAccountByAddress(this.activeAccountAddress);
@@ -372,6 +369,25 @@ export default class MainPage extends Mappers {
 
 <style lang="sass">
 .v-main-page
+  padding-bottom: 30px
   &__table
     background-color: #303540 !important
+    tr
+      &:hover
+        background-color: #303540 !important
+      td
+        padding: 0 !important
+        border-bottom: none !important
+    &-flex-col
+      display: flex
+      flex-direction: column
+      align-items: flex-end
+    &-amount
+      font-weight: 600
+      font-size: 15px
+      line-height: 20px
+    &-tx-id
+      font-weight: 300
+      font-size: 10px
+      line-height: 14px
 </style>

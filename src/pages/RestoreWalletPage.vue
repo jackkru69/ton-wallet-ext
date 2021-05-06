@@ -162,7 +162,7 @@
         <div class="d-flex justify-end">
           <VBtn
             x-small
-            :light="true"
+            light
             color="white"
             width="80"
             link

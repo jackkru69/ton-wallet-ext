@@ -16,13 +16,13 @@
           outlined
           class="v-app-bar__select"
           background-color="#FFFFFF"
-          :light="true"
+          light
           :menu-props="{ light: true, 'offset-y': true }"
         />
         <VMenu
           bottom
-          max-width="320px"
-          min-width="320px"
+          max-width="250px"
+          min-width="250px"
           max-height="526px"
           rounded
           left
@@ -31,15 +31,15 @@
           v-if="accountsCount !== 0"
         >
           <template v-slot:activator="{ on }">
-            <VBtn x-small class="ml-5" icon v-on="on">
+            <VBtn x-small class="ml-5 mr-1" icon v-on="on">
               <VAvatar color="white" size="40"> </VAvatar>
             </VBtn>
           </template>
-          <VCard :light="true">
+          <VCard light>
             <template v-if="!isEmpty(accounts)">
               <v-subheader>Accounts</v-subheader>
               <v-divider></v-divider>
-              <VList class="v-app-bar__list" max-height="228px">
+              <VList max-height="228px" class="v-app-bar__list">
                 <VListItemGroup
                   @change="onChange"
                   v-model="modelActiveAccountAddress"

@@ -1,5 +1,5 @@
 <template>
-  <VDialog v-model="model" max-width="325px">
+  <VDialog light v-model="model" max-width="325px">
     <VCard>
       <VCardTitle>
         <h3>Insufficient funds</h3>

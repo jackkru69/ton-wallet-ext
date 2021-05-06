@@ -40,14 +40,7 @@
           label="Confirm password"
         ></VTextField>
         <div class="d-flex justify-end">
-          <VBtn
-            x-small
-            width="80"
-            to="/"
-            class="mr-4"
-            :light="true"
-            color="white"
-          >
+          <VBtn x-small width="80" to="/" class="mr-4" light color="white">
             Back
           </VBtn>
           <VBtn
