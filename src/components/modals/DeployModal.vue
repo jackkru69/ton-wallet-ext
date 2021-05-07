@@ -13,8 +13,8 @@
         <v-card-text> </v-card-text>
         <v-card-actions>
           <VSpacer></VSpacer>
-          <VBtn x-small text @click="rejectPromise"> Nope </VBtn>
-          <VBtn x-small :loading="isPending" text type="submit"> Yeeees </VBtn>
+          <VBtn x-small text @click="rejectPromise"> No </VBtn>
+          <VBtn x-small :loading="isPending" text type="submit"> Yes </VBtn>
         </v-card-actions>
       </VForm>
     </VCard>

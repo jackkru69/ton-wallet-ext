@@ -3,9 +3,7 @@ import giverPackage from "./giver.package";
 import Transfer from "@/contracts/Transfer";
 import { BigNumber } from "bignumber.js";
 import { sliceString, baseToAssetAmount } from "../utils/index";
-import { TxPendingType, TxType } from "@/types/transactions";
-import naclUtil from "tweetnacl-util";
-import { contracts } from "../store/modules/accounts";
+import { TxType } from "@/types/transactions";
 
 export const SEED_PHRASE_DICTIONARY_ENGLISH = 1;
 export const HD_PATH = "m/44'/396'/0'/0/0";
@@ -156,8 +154,12 @@ export async function checkDeployStatus(client: TonClient, address: string, stat
   } else return undefined;
 }
 
-export function getExplorerLink(explorer: string, address: string) {
+export function getAccountExplorerLink(explorer: string, address: string) {
   return `${explorer}/accounts/accountDetails?id=${address}`;
+}
+
+export function getTxExplorerLink(explorer: string, txId: string) {
+  return `${explorer}/transactions/transactionDetails?id=${txId}`;
 }
 
 const findValue = (transaction: any) => {
@@ -188,9 +190,12 @@ export const formatTx = (tx: TxType) => {
   const address = findAddress(tx);
   return {
     ...tx,
-    fId: sliceString(tx.id),
+    fId: sliceString(tx.id, 8),
     type: value.isLessThan(0) ? "minus" : "plus",
     address: sliceString(address),
     fValue: baseToAssetAmount(value.toString(), "TON", 3),
   };
 };
+
+export const validateAddress = (address: string) =>
+  address ? address.match(/^(-1|0):[a-fA-F0-9]{64}$/g) !== null : false;

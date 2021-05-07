@@ -9,6 +9,7 @@ import LockScreenPage from "@/pages/LockScreenPage.vue";
 import EasyAddPage from "@/pages/EasyAddPage.vue";
 import ChangePasswordPage from "@/pages/ChangePasswordPage.vue";
 import ConfirmTransactionPage from "@/pages/ConfirmTransactionPage.vue";
+import ProposeTransactionPage from "@/pages/ProposeTransactionPage.vue";
 
 import { store } from "@/store";
 
@@ -67,6 +68,12 @@ const routes: Array<RouteConfig> = [
     path: "/confirm-transaction",
     name: "ConfirmTransactionPage",
     component: ConfirmTransactionPage,
+    meta: { isRequiredAuth: true, isInitPages: false },
+  },
+  {
+    path: "/propose-transaction",
+    name: "ProposeTransactionPage",
+    component: ProposeTransactionPage,
     meta: { isRequiredAuth: true, isInitPages: false },
   },
 ];

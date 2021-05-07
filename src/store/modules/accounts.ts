@@ -247,7 +247,6 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         name: account.walletType,
         keys: keypair,
       });
-      console.log("walletType", account.walletType);
       const custodians = account.custodians;
       await contract.deploy({
         input: {
@@ -284,43 +283,34 @@ class AccountsActions extends Actions<AccountsState, AccountsGetters, AccountsMu
         keys: keypair,
         address: account.address,
       });
-      const body = (
-        await client.abi.encode_message_body({
-          abi: { type: "Contract", value: Transfer.abi },
-          call_set: {
-            function_name: "transfer",
-            input: {
-              comment: Buffer.from(message).toString("hex"),
+      let body = "";
+      if (message) {
+        body = (
+          await client.abi.encode_message_body({
+            abi: { type: "Contract", value: Transfer.abi },
+            call_set: {
+              function_name: "transfer",
+              input: {
+                comment: Buffer.from(message).toString("hex"),
+              },
             },
-          },
-          is_internal: true,
-          signer: signerNone(),
-        })
-      ).body;
-
-      // if (account.custodians.length > 1) {
-      await contract.call({
+            is_internal: true,
+            signer: signerNone(),
+          })
+        ).body;
+      }
+      const result = await contract.call({
         functionName: "submitTransaction",
         input: {
           dest: addressTo,
           value: amount,
-          bounce: true,
+          bounce: false,
           allBalance: false,
           payload: body,
         },
       });
-      // } else {
-      //   await contract.call({
-      //     functionName: "sendTransaction",
-      //     input: {
-      //       dest: addressTo,
-      //       value: amount,
-      //       bounce: false,
-      //       flags: 1,
-      //       payload: body,
-      //     },
-      //   });
-      // }
+
+      return result.transaction.id;
     }
   }
 }

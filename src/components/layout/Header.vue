@@ -197,10 +197,14 @@ export default class Header extends Mappers {
 <style lang="sass" scoped>
 .v-app-bar
   &__logo
-    width: 40px
-    height: 40px
+    width: 80px
+    height: 30px
+    margin-right: 8px
   &__select
-    max-width: 190px
+    max-width: 150px
+    @media screen and (min-width: 375px)
+      max-width: 200px
+
   &__list
     overflow-y: auto
 </style>

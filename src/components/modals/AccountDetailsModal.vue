@@ -56,7 +56,7 @@
             width="100%"
             color="primary"
           >
-            Export Seed phrase</VBtn
+            Export Seed Phrase</VBtn
           >
           <VTextarea
             v-if="seedPhrase"

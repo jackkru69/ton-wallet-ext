@@ -87,17 +87,23 @@
           </VTooltip>
         </v-img>
       </VCard>
-
       <div class="d-flex justify-space-between mb-5">
         <VBtn
           color="primary"
           x-small
-          width="calc(50% - 10px)"
+          width="calc(33% - 10px)"
+          @click="transferOrConfirm('propose')"
+          >Propose transaction</VBtn
+        >
+        <VBtn
+          color="primary"
+          x-small
+          width="calc(33% - 10px)"
           @click="transferOrConfirm('confirm')"
           >Confirm transaction</VBtn
         >
         <VBtn
-          width="calc(50% - 10px)"
+          width="calc(33% - 10px)"
           x-small
           @click="transferOrConfirm('transfer')"
           color="primary"
@@ -142,9 +148,20 @@
               <div class="v-main-page__table-amount">
                 {{ item.fValue + " TON" }}
               </div>
-              <div class="v-main-page__table-tx-d">
-                {{ item.fId }}
-              </div>
+              <VTooltip bottom>
+                <template v-slot:activator="{ on, attrs }">
+                  <a
+                    v-bind="attrs"
+                    v-on="on"
+                    target="_blank"
+                    :href="txExplorerLink(item.id)"
+                    class="v-main-page__table-tx-id"
+                  >
+                    {{ item.fId }}
+                  </a>
+                </template>
+                <span>Explorer link</span>
+              </VTooltip>
             </td>
             <td>
               <div class="v-main-page__table-flex-col">
@@ -161,7 +178,6 @@
 import { Component, Inject, Vue, Watch } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import DeployModal from "@/components/modals/DeployModal.vue";
-import CustodiansModal from "@/components/modals/CustodiansModal.vue";
 // @ts-ignore
 import { TimeAgo } from "vue2-timeago";
 
@@ -175,8 +191,9 @@ import { baseToAssetAmount, sliceString } from "@/utils";
 import {
   formatTx,
   getAccountTxs,
-  getExplorerLink,
+  getAccountExplorerLink,
   sendGrams,
+  getTxExplorerLink,
 } from "@/ton/ton.utils";
 import { tonService } from "@/background";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
@@ -207,7 +224,8 @@ const Mappers = Vue.extend({
     ...accountsModuleMapper.mapMutations(["deleteAccount"]),
     ...walletModuleMapper.mapMutations(["setActiveAccountAddress"]),
     ...keystoreModuleMapper.mapActions(["removeKey"]),
-    getExplorerLink,
+    getAccountExplorerLink,
+    getTxExplorerLink,
   },
 });
 
@@ -273,11 +291,20 @@ export default class MainPage extends Mappers {
     if (this.activeAccountAddress) {
       const network = this.getNetworkByServer(this.activeNetworkServer);
       if (network) {
-        const link = this.getExplorerLink(
+        return this.getAccountExplorerLink(
           network.explorer,
           this.activeAccountAddress
         );
-        return link;
+      }
+    }
+    return "";
+  }
+
+  txExplorerLink(txId: string) {
+    if (this.activeAccountAddress) {
+      const network = this.getNetworkByServer(this.activeNetworkServer);
+      if (network) {
+        return this.getTxExplorerLink(network.explorer, txId);
       }
     }
     return "";
@@ -307,6 +334,9 @@ export default class MainPage extends Mappers {
       ).isGreaterThan(0);
       if (isBalanceGreaterThanZero) {
         if (this.account.networks.includes(this.activeNetworkServer)) {
+          if (action === "propose") {
+            this.$router.push("/propose-transaction");
+          }
           if (action === "confirm") {
             this.$router.push("/confirm-transaction");
           }
@@ -390,4 +420,9 @@ export default class MainPage extends Mappers {
       font-weight: 300
       font-size: 10px
       line-height: 14px
+      text-decoration: none
+      color: white !important
+      transition: all 0.3 ease-out
+      &:hover
+        font-weight: 400
 </style>

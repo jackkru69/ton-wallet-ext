@@ -17,7 +17,9 @@
           label="Address"
           :rules="[
             (v) => !!v || 'Address is required',
-            () => isValidAddress || 'invalid address format',
+            (v) => validateAddress(v) || 'invalid address format',
+            () =>
+              isCustodian === false || 'You are not the owner of this wallet',
           ]"
         ></VTextField>
 
@@ -68,7 +70,7 @@ import TonContract from "@/ton/ton.contract";
 import { tonService } from "@/background";
 import { TxPendingType } from "@/types/transactions";
 import { baseToAssetAmount, sliceString } from "@/utils";
-import { Promise } from "core-js";
+import { validateAddress } from "@/ton/ton.utils";
 
 const Mappers = Vue.extend({
   computed: {
@@ -77,6 +79,7 @@ const Mappers = Vue.extend({
   },
   methods: {
     ...accountsModuleMapper.mapActions(["transferOrProposeTransfer"]),
+    validateAddress,
   },
 });
 
@@ -244,7 +247,6 @@ export default class TransferPage extends Mappers {
     border-radius: 5px
     background-color: #303540 !important
     .table-item > td
-
       padding: 8px !important
       border-bottom: none !important
 </style>

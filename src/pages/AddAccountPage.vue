@@ -144,7 +144,7 @@
             light
             color="white"
             x-small
-            to="/initialize"
+            @click="$router.back()"
             class="mr-4"
           >
             Back
