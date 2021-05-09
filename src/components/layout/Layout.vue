@@ -7,7 +7,6 @@
       :rejectPromise="rejectPromise"
       :passwordErrors="passwordErrors"
     />
-
     <Header />
     <v-main>
       <v-container fluid class="pa-0">
@@ -19,7 +18,6 @@
 
 <script lang="ts">
 import { Component, Provide, Vue, Watch } from "vue-property-decorator";
-import Aside from "@/components/layout/Aside.vue";
 import Header from "@/components/layout/Header.vue";
 import { tonService } from "@/background";
 import { walletModuleMapper } from "@/store/modules/wallet";
@@ -33,12 +31,8 @@ import "@/styles/font.sass";
 
 const Mappers = Vue.extend({
   methods: {
-    ...accountsModuleMapper.mapActions([
-      "updateBalanceByAddress",
-      "setBalanceByAddressAndTokenSymbol",
-    ]),
+    ...accountsModuleMapper.mapActions(["updateBalanceByAddress"]),
     ...accountsModuleMapper.mapMutations([
-      "deleteAccount",
       "updateBalanceByAddressMut",
       "addNetworkToAccount",
     ]),
@@ -47,7 +41,6 @@ const Mappers = Vue.extend({
     ...walletModuleMapper.mapGetters([
       "activeAccountAddress",
       "activeNetworkServer",
-      "isStoreRestored",
     ]),
     ...accountsModuleMapper.mapGetters(["getAccountByAddress"]),
     ...keystoreModuleMapper.mapGetters([
@@ -59,7 +52,7 @@ const Mappers = Vue.extend({
 });
 
 @Component({
-  components: { Aside, Header, TypePasswordModal },
+  components: { Header, TypePasswordModal },
 })
 export default class Layout extends Mappers {
   timeoutID: NodeJS.Timeout;
@@ -96,11 +89,10 @@ export default class Layout extends Mappers {
     activeNetworkServer: number;
   }) {
     if (this.isMounted) {
-      const account = this.getAccountByAddress(val.activeAccountAddress);
-      if (account) {
+      if (val.activeAccountAddress && tonService.client.net) {
         const isExist = await checkDeployStatus(
           tonService.client,
-          account.address,
+          val.activeAccountAddress,
           [0, 1, 2]
         );
 
@@ -112,7 +104,7 @@ export default class Layout extends Mappers {
           }, 8000);
         } else {
           this.updateBalanceByAddressMut({
-            address: account.address,
+            address: val.activeAccountAddress,
             symbol: "TON",
             newBalance: "0",
           });
@@ -144,7 +136,7 @@ export default class Layout extends Mappers {
     // @ts-ignore
     store.restored.then(async () => {
       this.isMounted = true;
-      if (this.activeAccountAddress) {
+      if (this.activeAccountAddress && tonService.client.net) {
         const isExist = await checkDeployStatus(
           tonService.client,
           this.activeAccountAddress,

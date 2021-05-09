@@ -37,7 +37,17 @@
           </template>
           <VCard light>
             <template v-if="!isEmpty(accounts)">
-              <v-subheader>Accounts</v-subheader>
+              <div class="d-flex justify-space-between align-center py-3 px-4">
+                <h2>Accounts</h2>
+                <VTooltip v-if="isPopup" bottom>
+                  <template v-slot:activator="{ on, attrs }">
+                    <VIcon @click="expandView" v-bind="attrs" v-on="on">
+                      mdi-arrow-expand-all
+                    </VIcon>
+                  </template>
+                  <span>Expand view</span>
+                </VTooltip>
+              </div>
               <v-divider></v-divider>
               <VList max-height="228px" class="v-app-bar__list">
                 <VListItemGroup
@@ -107,7 +117,6 @@ import { convertSeedToKeyPair, generateSeed } from "@/ton/ton.utils";
 import { isEmpty } from "lodash";
 import { Component, Inject, Vue } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
-
 const Mappers = Vue.extend({
   methods: {
     ...walletModuleMapper.mapMutations([
@@ -159,6 +168,8 @@ export default class Header extends Mappers {
 
   @Inject() showTypePasswordModal!: any;
 
+  @Inject() isPopup!: boolean;
+
   onClickEasyAdd() {
     this.showTypePasswordModal().then(async (result: any) => {
       const seedPhrase: any = await generateSeed(tonService.client, 12);
@@ -191,6 +202,13 @@ export default class Header extends Mappers {
       this.$router.push("/initialize");
     });
   }
+
+  expandView() {
+    // @ts-ignore
+    const extensionURL = browser.runtime.getURL("index.html");
+    // @ts-ignore
+    browser.tabs.create({ url: extensionURL });
+  }
 }
 </script>
 
@@ -204,7 +222,6 @@ export default class Header extends Mappers {
     max-width: 150px
     @media screen and (min-width: 375px)
       max-width: 200px
-
   &__list
     overflow-y: auto
 </style>

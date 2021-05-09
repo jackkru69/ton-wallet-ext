@@ -10,5 +10,6 @@ export default {
   components: {
     Layout,
   },
+  provide: { isPopup: false },
 };
 </script>

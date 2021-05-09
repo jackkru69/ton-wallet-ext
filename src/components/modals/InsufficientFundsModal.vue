@@ -2,8 +2,11 @@
   <VDialog light v-model="model" max-width="325px">
     <VCard>
       <VCardTitle>
-        <h3>Insufficient funds</h3>
-      </VCardTitle>
+        <h3>Insufficient funds</h3> </VCardTitle
+      ><VCardText
+        >You do not have the required funds available in your
+        account.</VCardText
+      >
     </VCard>
   </VDialog>
 </template>

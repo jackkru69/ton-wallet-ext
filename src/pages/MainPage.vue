@@ -92,20 +92,20 @@
           color="primary"
           x-small
           width="calc(33% - 10px)"
-          @click="transferOrConfirm('propose')"
+          @click="action('propose')"
           >Propose transaction</VBtn
         >
         <VBtn
           color="primary"
           x-small
           width="calc(33% - 10px)"
-          @click="transferOrConfirm('confirm')"
+          @click="action('confirm')"
           >Confirm transaction</VBtn
         >
         <VBtn
           width="calc(33% - 10px)"
           x-small
-          @click="transferOrConfirm('transfer')"
+          @click="action('transfer')"
           color="primary"
           >Send transaction</VBtn
         >
@@ -208,7 +208,6 @@ const Mappers = Vue.extend({
     ...walletModuleMapper.mapGetters([
       "activeAccountAddress",
       "activeNetworkServer",
-      "isStoreRestored",
     ]),
     ...accountsModuleMapper.mapGetters([
       "getAccountByAddress",
@@ -327,7 +326,7 @@ export default class MainPage extends Mappers {
     }
   }
 
-  transferOrConfirm(action: string) {
+  action(action: string) {
     if (this.account) {
       const isBalanceGreaterThanZero = new BigNumber(
         this.balance
