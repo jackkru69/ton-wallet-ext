@@ -12,21 +12,32 @@
           autocomplete="off"
           dense
           v-model.trim="password"
-          clearable
-          :rules="[(v) => !!v || 'Password is required']"
+          :rules="[
+            (v) => !!v || 'Password is required',
+            (v) => validatePassword(v),
+          ]"
           outlined
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           label="Password"
         ></VTextField>
         <VTextField
           autocomplete="off"
           dense
           v-model.trim="confirmPassword"
-          clearable
           :rules="[
             (v) => !!v || 'Confirm password is required',
             (v) => password === v || 'Passwords don\'t match',
           ]"
           outlined
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           label="Confirm password"
         ></VTextField>
         <div class="d-flex justify-end">
@@ -63,6 +74,7 @@ import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
 import { isEmpty } from "lodash";
+import { validatePassword } from "@/utils/validation";
 
 const Mappers = Vue.extend({
   computed: {
@@ -75,6 +87,7 @@ const Mappers = Vue.extend({
   methods: {
     ...accountsModuleMapper.mapActions(["addAccount"]),
     isEmpty,
+    validatePassword,
   },
 });
 
@@ -86,6 +99,8 @@ export default class CreateWalletPage extends Mappers {
 
   password = "";
   confirmPassword = "";
+
+  isHidePassword = true;
 
   async onSubmit() {
     const seedPhrase: any = await generateSeed(tonService.client, 12);

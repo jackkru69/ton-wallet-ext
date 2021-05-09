@@ -23,7 +23,7 @@
           :items="walletsTypes"
           label="Wallet type"
           outlined
-          :menu-props="{ 'offset-y': true }"
+          :menu-props="{ 'offset-y': true, light: true }"
         ></VSelect>
         <VSelect
           dense
@@ -33,7 +33,7 @@
           label="World count"
           outlined
           hide-details
-          :menu-props="{ 'offset-y': true }"
+          :menu-props="{ 'offset-y': true, light: true }"
           :rules="[(v) => !!`${v}` || 'World count type is required']"
         ></VSelect>
         <div class="d-flex justify-end mb-5">
@@ -69,25 +69,38 @@
         <VTextField
           autocomplete="off"
           dense
+          clearable
           v-if="accountsCount === 0"
           v-model.trim="password"
-          clearable
-          :rules="[(v) => !!v || 'Password is required']"
+          :rules="[
+            (v) => !!v || 'Password is required',
+            (v) => validatePassword(v),
+          ]"
           outlined
           label="Password"
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           :error-messages="passwordErrors"
         ></VTextField>
         <VTextField
           autocomplete="off"
           dense
+          clearable
           v-if="accountsCount === 0"
           v-model.trim="confirmPassword"
-          clearable
           :rules="[
             (v) => !!v || 'Confirm password is required',
             (v) => password === v || 'Passwords don\'t match',
           ]"
           outlined
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           label="Confirm password"
         ></VTextField>
         <div class="d-flex align-center justify-space-between mb-5">
@@ -179,6 +192,7 @@ import { tonService } from "@/background";
 import { isEmpty } from "lodash";
 import { rootModuleMapper } from "@/store/root";
 import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
+import { validatePassword } from "@/utils/validation";
 
 const Mappers = Vue.extend({
   computed: {
@@ -192,6 +206,7 @@ const Mappers = Vue.extend({
     ...accountsModuleMapper.mapActions(["addAccount"]),
     ...rootModuleMapper.mapMutations(["setIsLocked"]),
     isEmpty,
+    validatePassword,
   },
 });
 
@@ -207,6 +222,8 @@ export default class CreateWalletPage extends Mappers {
 
   password = "";
   confirmPassword = "";
+
+  isHidePassword = true;
 
   passwordErrors: string[] = [];
 

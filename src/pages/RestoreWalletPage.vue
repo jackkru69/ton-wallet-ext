@@ -25,7 +25,7 @@
           :items="walletsTypes"
           label="Wallet type"
           outlined
-          :menu-props="{ 'offset-y': true }"
+          :menu-props="{ 'offset-y': true, light: true }"
         ></VSelect>
         <VSelect
           dense
@@ -42,7 +42,7 @@
           ]"
           label="Restory type"
           outlined
-          :menu-props="{ 'offset-y': true }"
+          :menu-props="{ 'offset-y': true, light: true }"
         ></VSelect>
         <VTextField
           autocomplete="off"
@@ -138,24 +138,37 @@
         <VTextField
           autocomplete="off"
           dense
+          clearable
           v-if="accountsCount === 0"
           v-model.trim="password"
-          clearable
-          :rules="[(v) => !!v || 'Password is required']"
+          :rules="[
+            (v) => !!v || 'Password is required',
+            (v) => validatePassword(v),
+          ]"
           outlined
           label="Password"
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           :error-messages="passwordErrors"
         ></VTextField>
         <VTextField
           autocomplete="off"
           dense
+          clearable
           v-if="accountsCount === 0"
           v-model.trim="confirmPassword"
-          clearable
           :rules="[
             (v) => !!v || 'Confirm password is required',
             (v) => password === v || 'Passwords don\'t match',
           ]"
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           outlined
           label="Confirm password"
         ></VTextField>
@@ -206,6 +219,7 @@ import TonContract from "@/ton/ton.contract";
 import { KeyPair } from "@tonclient/core";
 import { isEmpty } from "lodash";
 import TypePasswordModal from "@/components/modals/TypePasswordModal.vue";
+import { validatePassword } from "@/utils/validation";
 
 const Mappers = Vue.extend({
   computed: {
@@ -224,7 +238,7 @@ const Mappers = Vue.extend({
 
 @Component({
   components: { Inner, TypePasswordModal },
-  methods: { isEmpty },
+  methods: { isEmpty, validatePassword },
 })
 export default class RestoreWalletPage extends Mappers {
   valid = true;
@@ -241,6 +255,8 @@ export default class RestoreWalletPage extends Mappers {
   password = "";
   confirmPassword = "";
   passwordErrors: string[] = [];
+
+  isHidePassword = true;
 
   seedPhraseTips: string[] = [];
   keyPairTips: string[] = [];

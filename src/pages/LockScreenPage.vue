@@ -14,9 +14,17 @@
           class="mb-8"
           v-model.trim="password"
           clearable
-          :rules="[(v) => !!v || 'Password is required']"
+          :rules="[
+            (v) => !!v || 'Password is required',
+            (v) => validatePassword(v),
+          ]"
           outlined
           label="Password"
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           :error-messages="passwordErrors"
         ></VTextField>
 
@@ -35,6 +43,7 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import Inner from "@/components/layout/Inner.vue";
 import { rootModuleMapper } from "@/store/root";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
+import { validatePassword } from "@/utils/validation";
 
 const Mappers = Vue.extend({
   computed: {
@@ -47,12 +56,15 @@ const Mappers = Vue.extend({
 
 @Component({
   components: { Inner },
+  methods: { validatePassword },
 })
 export default class LockScreenPage extends Mappers {
   valid = true;
 
   password = "";
   passwordErrors: string[] = [];
+
+  isHidePassword = true;
 
   @Watch("password")
   onChangePassword() {

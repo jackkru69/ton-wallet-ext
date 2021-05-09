@@ -18,7 +18,6 @@
           :rules="[
             (v) => !!v || 'Address is required',
             (v) => validateAddress(v) || 'invalid address format',
-            (v) => isCustodian || 'You are not the owner of this wallet',
           ]"
         ></VTextField>
 
@@ -109,7 +108,7 @@ const Mappers = Vue.extend({
 export default class TransferPage extends Mappers {
   valid = true;
 
-  isCustodian = true;
+  isCustodian: any = true;
 
   selected = [];
 
@@ -151,8 +150,6 @@ export default class TransferPage extends Mappers {
           }
         }
       }
-    } else {
-      this.isCustodian = true;
     }
   }
 

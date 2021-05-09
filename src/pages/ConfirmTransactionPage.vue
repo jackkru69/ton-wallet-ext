@@ -18,8 +18,6 @@
           :rules="[
             (v) => !!v || 'Address is required',
             (v) => validateAddress(v) || 'invalid address format',
-            () =>
-              isCustodian === false || 'You are not the owner of this wallet',
           ]"
         ></VTextField>
 

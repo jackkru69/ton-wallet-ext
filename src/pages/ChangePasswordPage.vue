@@ -15,6 +15,11 @@
           clearable
           :rules="[(v) => !!v || 'Old password is required']"
           outlined
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           :error-messages="passwordErrors"
           label="Old password"
         ></VTextField>
@@ -23,13 +28,26 @@
           dense
           v-model.trim="newPassword"
           clearable
-          :rules="[(v) => !!v || 'Password is required']"
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
+          :rules="[
+            (v) => !!v || 'Password is required',
+            (v) => validatePassword(v),
+          ]"
           outlined
           label="Password"
         ></VTextField>
         <VTextField
           autocomplete="off"
           dense
+          :append-icon="
+            isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+          "
+          @click:append="() => (isHidePassword = !isHidePassword)"
+          :type="isHidePassword ? 'password' : 'text'"
           v-model.trim="confirmNewPassword"
           clearable
           :rules="[
@@ -65,6 +83,7 @@ import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { isEmpty } from "lodash";
 import { keystoreModuleMapper } from "@/store/modules/keystore";
+import { validatePassword } from "@/utils/validation";
 
 const Mappers = Vue.extend({
   computed: {
@@ -82,6 +101,7 @@ const Mappers = Vue.extend({
 
 @Component({
   components: { Inner },
+  methods: { validatePassword },
 })
 export default class ChangePasswordPage extends Mappers {
   valid = true;
@@ -91,6 +111,7 @@ export default class ChangePasswordPage extends Mappers {
   confirmNewPassword = "";
 
   passwordErrors: string[] = [];
+  isHidePassword = true;
 
   @Watch("oldPassword")
   onChangePassword() {

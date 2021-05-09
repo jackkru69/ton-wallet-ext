@@ -10,16 +10,22 @@
         <VCardTitle>
           <h3>Type your password</h3>
         </VCardTitle>
-        <VCardText>
+        <VCardText class="pb-0">
           <VTextField
             autocomplete="off"
-            hide-details
             v-model.trim="password"
             clearable
-            :rules="[(v) => !!v || 'Password is required']"
+            :rules="[
+              (v) => !!v || 'Password is required',
+              (v) => validatePassword(v),
+            ]"
             outlined
             label="Password"
-            type="password"
+            :append-icon="
+              isHidePassword ? 'mdi-eye-outline' : 'mdi-eye-off-outline'
+            "
+            @click:append="() => (isHidePassword = !isHidePassword)"
+            :type="isHidePassword ? 'password' : 'text'"
             :error-messages="passwordErrors"
           ></VTextField
         ></VCardText>
@@ -34,14 +40,17 @@
 </template>
 <script lang="ts">
 import { sliceString } from "@/utils";
+import { validatePassword } from "@/utils/validation";
 import { Component, ModelSync, Prop, Vue } from "vue-property-decorator";
 
-@Component({ methods: { sliceString } })
+@Component({ methods: { sliceString, validatePassword } })
 export default class TypePasswordModal extends Vue {
   valid = true;
 
   @ModelSync("change", "value", { type: String })
   password!: boolean;
+
+  isHidePassword = true;
 
   @Prop() isOpen: boolean;
   @Prop() resolvePromise: any;

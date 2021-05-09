@@ -1,9 +1,9 @@
 import { Getters, Mutations, Actions, Module, createMapper } from "vuex-smart-module";
 
 export const defaultNetworks = [
-  { name: "TON local network", server: "http://0.0.0.0", explorer: "", isDev: true },
   { name: "TON testnet network", server: "http://net.ton.dev", explorer: "https://net.ton.live", isDev: true },
   { name: "TON mainnet network", server: "http://main.ton.dev", explorer: "https://ton.live", isDev: false },
+  { name: "TON local network", server: "http://0.0.0.0", explorer: "", isDev: true },
 ];
 
 export interface NetworkInterface {
