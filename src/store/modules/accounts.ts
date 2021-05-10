@@ -10,8 +10,6 @@ import Vue from "vue";
 import { Store } from "vuex";
 import Transfer from "@/contracts/Transfer";
 
-export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
-
 export const walletsTypes = [
   // {
   //   text: "Original TON wallet",
@@ -37,6 +35,7 @@ export const contracts: any = {
   "set-code-multisig": SetCodeMultisig,
   "set-code-multisig2": SetCodeMultisig2,
 };
+export type WalletType = "safe-multisig" | "set-code-multisig" | "set-code-multisig2";
 
 export type TokenType = {
   name: string;

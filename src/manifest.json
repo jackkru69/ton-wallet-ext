@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "ShardEx",
   "homepage_url": "https://rsquad.io",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "FreeTON wallet",
   "default_locale": "en",
   "content_security_policy": "script-src 'self' 'wasm-eval' 'unsafe-eval'; object-src 'self'",
@@ -16,14 +16,6 @@
     "scripts": ["js/background.js"],
     "persistent": false
   },
-  "content_scripts": [
-    {
-      "matches": ["file://*/*", "http://*/*", "https://*/*"],
-      "js": ["js/content-script.js"],
-      "run_at": "document_start",
-      "all_frames": true
-    }
-  ],
   "browser_action": {
     "default_popup": "popup.html",
     "default_title": "ShardEx",
@@ -31,6 +23,5 @@
       "19": "icons/19.png",
       "38": "icons/38.png"
     }
-  },
-  "web_accessible_resources": ["js/injection.js"]
+  }
 }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const CopyPlugin = require("copy-webpack-plugin");
 const path = require("path");
-const RemovePlugin = require("remove-files-webpack-plugin");
+// const RemovePlugin = require("remove-files-webpack-plugin");
 
 module.exports = {
   transpileDependencies: ["vuetify", "vuex-persist"],
@@ -14,11 +14,11 @@ module.exports = {
           toType: "dir",
         },
       ]),
-      new RemovePlugin({
-        after: {
-          include: ["./dist/injection.html"],
-        },
-      }),
+      // new RemovePlugin({
+      //   after: {
+      //     include: ["./dist/injection.html"],
+      //   },
+      // }),
     ],
     output: {
       filename: "js/[name].js",
@@ -38,9 +38,9 @@ module.exports = {
       entry: "./src/standalone/main.ts",
       filename: "index.html",
     },
-    injection: {
-      entry: "./src/injection.ts",
-    },
+    // injection: {
+    //   entry: "./src/injection.ts",
+    // },
   },
   pluginOptions: {
     browserExtension: {
@@ -48,13 +48,12 @@ module.exports = {
         background: {
           entry: "src/background.ts",
         },
-        contentScripts: {
-          entries: {
-            "content-script": ["src/content-script.ts"],
-          },
-        },
+        // contentScripts: {
+        //   entries: {
+        //     "content-script": ["src/content-script.ts"],
+        //   },
+        // },
       },
     },
   },
-
 };
