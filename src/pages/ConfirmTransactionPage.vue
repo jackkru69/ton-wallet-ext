@@ -237,14 +237,14 @@ export default class TransferPage extends Mappers {
 }
 </script>
 
-<style lang="sass" scoped>
+<style lang="sass">
 .v-confirm-page
   &__table
     border: 1px solid #FFFFFF
     box-sizing: border-box
     border-radius: 5px
     background-color: #303540 !important
-    .table-item > td
-      padding: 8px !important
-      border-bottom: none !important
+  & td,th
+    padding: 0 8px !important
+    border-bottom: none !important
 </style>

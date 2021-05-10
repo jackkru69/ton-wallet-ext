@@ -87,27 +87,15 @@
           </VTooltip>
         </v-img>
       </VCard>
-      <div class="d-flex justify-space-between mb-5">
-        <VBtn
-          color="primary"
-          x-small
-          width="calc(33% - 10px)"
-          @click="action('propose')"
+      <div class="v-main-page__buttons-row mb-5">
+        <VBtn x-small @click="action('transfer')" color="primary"
+          >Send transaction</VBtn
+        >
+        <VBtn color="primary" x-small @click="action('propose')"
           >Propose transaction</VBtn
         >
-        <VBtn
-          color="primary"
-          x-small
-          width="calc(33% - 10px)"
-          @click="action('confirm')"
+        <VBtn color="primary" x-small @click="action('confirm')"
           >Confirm transaction</VBtn
-        >
-        <VBtn
-          width="calc(33% - 10px)"
-          x-small
-          @click="action('transfer')"
-          color="primary"
-          >Send transaction</VBtn
         >
       </div>
 
@@ -399,6 +387,20 @@ export default class MainPage extends Mappers {
 <style lang="sass">
 .v-main-page
   padding-bottom: 30px
+  &__buttons-row
+    display: flex
+    flex-direction: column
+    button:not(:last-child)
+      margin-bottom: 8px
+
+    @media screen and (min-width: 500px)
+      flex-direction: row
+      justify-content: space-between
+      button
+        width: calc( 33% - 10px )
+      button:not(:last-child)
+        margin-bottom: 0
+
   &__table
     background-color: #303540 !important
     tr

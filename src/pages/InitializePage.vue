@@ -1,7 +1,7 @@
 <template>
   <div class="v-initialize-page py-8">
     <Inner>
-      <h1 class="text-center mb-8">Create or restore wallet</h1>
+      <h1 class="text-center mb-8">Create or restore account</h1>
       <div class="v-initialize-page d-flex justify-center align-center">
         <VCard
           hover

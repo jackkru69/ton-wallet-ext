@@ -25,7 +25,10 @@
           clearable
           outlined
           label="Amount"
-          :rules="[(v) => !!`${v}` || 'Amount type is required']"
+          :rules="[
+            (v) => !!`${v}` || 'Amount type is required',
+            (v) => validateAmount(v),
+          ]"
         ></VTextField>
 
         <VTextField
@@ -61,11 +64,13 @@ import Inner from "@/components/layout/Inner.vue";
 import { accountsModuleMapper } from "@/store/modules/accounts";
 import { walletModuleMapper } from "@/store/modules/wallet";
 import { tonService } from "@/background";
-import { assetToBaseAmount } from "@/utils";
+import { assetToBaseAmount, baseToAssetAmount } from "@/utils";
+import BigNumber from "bignumber.js";
 
 const Mappers = Vue.extend({
   computed: {
     ...walletModuleMapper.mapGetters(["activeAccountAddress"]),
+    ...accountsModuleMapper.mapGetters(["getTokenBySymbol"]),
   },
   methods: {
     ...accountsModuleMapper.mapActions(["transferOrProposeTransfer"]),
@@ -85,6 +90,27 @@ export default class TransferPage extends Mappers {
   message = "";
 
   @Inject() showTypePasswordModal!: any;
+
+  public get balance(): string {
+    if (this.activeAccountAddress) {
+      const token = this.getTokenBySymbol(this.activeAccountAddress, "TON");
+      if (token) {
+        return token.balance;
+      }
+    }
+    return "";
+  }
+
+  validateAmount(v: string) {
+    const balance = baseToAssetAmount(this.balance, "TON", 3);
+    const isBalanceLessThenValue = new BigNumber(balance)
+      .minus(0.011)
+      .isLessThanOrEqualTo(v);
+    if (isBalanceLessThenValue) {
+      return `Insufficient funds. Your balance ${balance}`;
+    }
+    return true;
+  }
 
   async onSubmit() {
     this.showTypePasswordModal(this.activeAccountAddress).then(

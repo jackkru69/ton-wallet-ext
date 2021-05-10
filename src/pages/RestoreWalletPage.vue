@@ -9,7 +9,7 @@
         lazy-validation
         @submit.prevent="onSubmit"
       >
-        <h1 class="mb-5">Restore wallet</h1>
+        <h1 class="mb-5">Restore account</h1>
         <VTextField
           autocomplete="off"
           dense
